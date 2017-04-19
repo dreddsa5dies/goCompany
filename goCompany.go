@@ -85,6 +85,7 @@ func main() {
 
 	}
 	defer file.Close()
+	log.Printf("Создание файла отчета %v", file.Name())
 
 	// заголовок
 	getFile, err := file.Stat()
@@ -99,6 +100,7 @@ func main() {
 	}
 
 	for i := 0; i < len(companyJSON); i++ {
+		log.Printf("Запись данных о %v", companyJSON[i].SHORTNAME)
 		file.WriteString(strconv.Itoa(companyJSON[i].ID) + ";")
 		file.WriteString(companyJSON[i].INN + ";")
 		file.WriteString(companyJSON[i].KPP + ";")
