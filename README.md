@@ -2,17 +2,10 @@
 
 ![IMAGE](img/goCompany.png)
 
-### goCompany, go-client для работы с [ОГРН онлайн](https://ru.rus.company/)
+### Go (golang) package for use with [ОГРН онлайн](https://ru.rus.company/) API
 
 ## Features
 * Поиск и сохранение данных о компаниях
-
-### Usage
-
-```
-local> goCompany
-
-```
 
 ## License
 This project is licensed under MIT license. Please read the LICENSE file.
