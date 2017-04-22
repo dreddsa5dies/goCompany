@@ -2,19 +2,59 @@
 
 ![IMAGE](img/goCompany.png)
 
-### Go (golang) package for use with [ОГРН онлайн](https://ru.rus.company/) API
+### Go (golang) пакет для использования [ОГРН онлайн](https://ru.rus.company/) API
 
-## Features
-* Поиск и сохранение данных о компаниях
+## Особенности
+* Поиск по Наименованию
+* Поиск по ОГРН
+* Посик по ИНН
 
-## License
-This project is licensed under MIT license. Please read the LICENSE file.
+## TODO:
+* GET /интеграция/компании/{id}/
+* GET /интеграция/компании/{id}/учредители/
+* GET /интеграция/компании/{id}/сотрудники/
+* GET /интеграция/компании/{id}/зависимые/
+* GET /интеграция/люди/{id}/
+* GET /интеграция/люди/{id}/должности/
+* GET /интеграция/люди/{id}/компании/
+* GET /интеграция/ип/
 
+## Установка
+```bash
+go get github.com/dreddsa5dies/goCompany
+```
 
-## Contribute
-Welcomes any kind of contribution, please follow the next steps:
+## Пример использования
+Примеры использования смотрите в папке _examples
+```Go
+package main
 
-- Fork the project on github.com.
-- Create a new branch.
-- Commit changes to the new branch.
-- Send a pull request.
+import (
+	"fmt"
+	"os"
+
+	gocompany "github.com/dreddsa5dies/goCompany"
+)
+
+func main() {
+	name := "Ласточка"
+	result, err := gocompany.GetByName(name)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(result)
+	os.Exit(0)
+}
+```
+
+## Лицензия
+Проект под лицензией MIT. Прочитайте LICENSE файл.
+
+## Вклад в проект
+Добро пожаловать, следуйте следующим шагам:
+
+- Форкните (fork) проект на github.com.
+- Создайте новую ветку.
+- Зафиксируйте (commit) изменения в Вашей ветке.
+- Отправьте pull request.
