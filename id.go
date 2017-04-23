@@ -23,6 +23,7 @@ type IDData struct {
 	Email             string `json:"email"`
 	AuthorizedCapital `json:"authorizedCapital"`
 	Address           `json:"address"`
+	MainOkved1        `json:"mainOkved1"`
 }
 
 // Okopf
@@ -53,19 +54,42 @@ type TypeCapital struct {
 
 // Address
 type Address struct {
-	Region `json:"region"`
+	Region           `json:"region"`
+	Street           `json:"street"`
+	House            string `json:"house"`
+	Building         string `json:"building"`
+	Flat             string `json:"flat"`
+	PostalIndex      string `json:"postalIndex"`
+	FullAddress      string `json:"fullAddress"`
+	FullHouseAddress string `json:"fullHouseAddress"`
 }
 
 // Region
 type Region struct {
-	ID         int    `json:"id"`
-	NAME       string `json:"name"`
-	AOID       string `json:"aoid"`
-	GUID       string `json:"guid"`
-	PostalCode string `json:"postalCode"`
-	Level      int    `json:"level"`
-	OKATO      string `json:"okato"`
-	RegionType `json:"type"`
+	ID            int    `json:"id"`
+	NAME          string `json:"name"`
+	AOID          string `json:"aoid"`
+	GUID          string `json:"guid"`
+	PostalCode    string `json:"postalCode"`
+	Level         int    `json:"level"`
+	OKATO         string `json:"okato"`
+	RegionType    `json:"type"`
+	RegionCode    string `json:"regionCode"`
+	AutoCode      string `json:"autoCode"`
+	AreaCode      string `json:"areaCode"`
+	CityCode      string `json:"cityCode"`
+	CtarCode      string `json:"ctarCode"`
+	PlaceCode     string `json:"placeCode"`
+	StreetCode    string `json:"streetCode"`
+	ExtrCode      string `json:"extrCode"`
+	SextCode      string `json:"sextCode"`
+	KladrCode     string `json:"kladrCode"`
+	Live          bool   `json:"live"`
+	TypeName      string `json:"typeName"`
+	TypeShortName string `json:"typeShortName"`
+	URL           string `json:"url"`
+	CompanyCount  int    `json:"companyCount"`
+	FullName      string `json:"fullName"`
 }
 
 // RegionType
@@ -75,6 +99,64 @@ type RegionType struct {
 	ShortName string `json:"shortName"`
 	Code      string `json:"code"`
 	Level     int    `json:"level"`
+}
+
+// Street
+type Street struct {
+	ID            int    `json:"id"`
+	NAME          string `json:"name"`
+	AOID          string `json:"aoid"`
+	GUID          string `json:"guid"`
+	Level         int    `json:"level"`
+	StreetType    `json:"type"`
+	RegionCode    string `json:"regionCode"`
+	AutoCode      string `json:"autoCode"`
+	AreaCode      string `json:"areaCode"`
+	CityCode      string `json:"cityCode"`
+	CtarCode      string `json:"ctarCode"`
+	PlaceCode     string `json:"placeCode"`
+	StreetCode    string `json:"streetCode"`
+	ExtrCode      string `json:"extrCode"`
+	SextCode      string `json:"sextCode"`
+	KladrCode     string `json:"kladrCode"`
+	Live          bool   `json:"live"`
+	TypeName      string `json:"typeName"`
+	TypeShortName string `json:"typeShortName"`
+	URL           string `json:"url"`
+	CompanyCount  int    `json:"companyCount"`
+	FullName      string `json:"fullName"`
+}
+
+// StreetType
+type StreetType struct {
+	ID        int    `json:"id"`
+	NAME      string `json:"name"`
+	ShortName string `json:"shortName"`
+	Code      string `json:"code"`
+	Level     int    `json:"level"`
+}
+
+// MainOkved1
+type MainOkved1 struct {
+	ID           int    `json:"id"`
+	NAME         string `json:"name"`
+	Code         string `json:"code"`
+	Parent       `json:"parent"`
+	CompanyCount int      `json:"companyCount"`
+	URL          string   `json:"url"`
+	FullName     string   `json:"fullName"`
+	Okved1       []Okved1 `json:"okved1"`
+}
+
+// Okved1
+type Okved1 struct {
+	ID           int    `json:"id"`
+	NAME         string `json:"name"`
+	Code         string `json:"code"`
+	Parent       `json:"parent"`
+	CompanyCount int    `json:"companyCount"`
+	URL          string `json:"url"`
+	FullName     string `json:"fullName"`
 }
 
 // GetIDData возвращает IDData
