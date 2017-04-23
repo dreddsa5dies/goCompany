@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// IDData структура для информации по ID компании
+// IDData структура данных из ЕГРЮЛ о компании с идентификатором {id}
 // пример по ссылке https://ru.rus.company/интеграция/компании/7030/
 type IDData struct {
 	ID                int    `json:"id"`
@@ -22,11 +22,12 @@ type IDData struct {
 	LastUpdateDate    string `json:"lastUpdateDate"`
 	Email             string `json:"email"`
 	AuthorizedCapital `json:"authorizedCapital"`
+	Address           `json:"address"`
 }
 
 // Okopf
 type Okopf struct {
-	ID       string `json:"id"`
+	ID       int    `json:"id"`
 	CODE     string `json:"code"`
 	NAME     string `json:"name"`
 	FULLNAME string `json:"fullname"`
@@ -35,30 +36,53 @@ type Okopf struct {
 
 // Parent
 type Parent struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 // AuthorizedCapital
 type AuthorizedCapital struct {
 	TypeCapital `json:"type"`
-	Value       string `json:"value"`
+	Value       float64 `json:"value"`
+}
+
+// TypeCapital
+type TypeCapital struct {
+	ID   int    `json:"id"`
+	NAME string `json:"name"`
 }
 
 // Address
 type Address struct {
-	Region
+	Region `json:"region"`
 }
 
 // Region
 type Region struct {
+	ID         int    `json:"id"`
+	NAME       string `json:"name"`
+	AOID       string `json:"aoid"`
+	GUID       string `json:"guid"`
+	PostalCode string `json:"postalCode"`
+	Level      int    `json:"level"`
+	OKATO      string `json:"okato"`
+	RegionType `json:"type"`
 }
 
-// GetIDData возвращает массив IDData
-func GetIDData(id string) ([]IDData, error) {
+// RegionType
+type RegionType struct {
+	ID        int    `json:"id"`
+	NAME      string `json:"name"`
+	ShortName string `json:"shortName"`
+	Code      string `json:"code"`
+	Level     int    `json:"level"`
+}
+
+// GetIDData возвращает IDData
+func GetIDData(id string) (IDData, error) {
 	url := baseURL + id + "/"
 
 	// создание массива переменных для хранения ответа
-	var companyJSON []IDData
+	var companyJSON IDData
 
 	// обращение к API
 	resp, err := http.Get(url)
