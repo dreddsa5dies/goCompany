@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 )
 
 var (
-	baseURL = "https://ru.rus.company/"
+	baseURL = "https://ru.rus.company/интеграция/компании/"
 )
 
-// SaveData структура для базовой информации формата:
+// BaseData структура для базовой информации формата:
 // {
 // "id" : "7030",
 // "name" : "АКЦИОНЕРНОЕ ОБЩЕСТВО "ИНСТИТУТ "СТРОЙПРОЕКТ"",
@@ -21,7 +22,7 @@ var (
 // "inn" : "7826688390",
 // "kpp" : "781001001"
 // }
-type SaveData struct {
+type BaseData struct {
 	ID        int    `json:"id"`
 	OGRN      string `json:"ogrn"`
 	NAME      string `json:"name"`
@@ -32,12 +33,28 @@ type SaveData struct {
 	URL       string `json:"url"`
 }
 
-// GetByName возвращает массив SaveData
-func GetByName(nameCompany string) ([]SaveData, error) {
-	url := baseURL + "/интеграция/компании/?наименование=" + nameCompany + "&стр=5"
+// GetBaseData возвращает массив BaseData
+func GetBaseData(data string) ([]BaseData, error) {
+	var url string
+
+	// блоки для проверки по регулярному выражению
+	regOgrn, _ := regexp.Compile(`([0-9]){13}`)
+	regInn, _ := regexp.Compile(`([0-9]){10,12}`)
+
+	switch {
+	//если это ОГРН
+	case regOgrn.MatchString(data):
+		url = baseURL + "?огрн=" + data
+	// если это ИНН
+	case regInn.MatchString(data):
+		url = baseURL + "?инн=" + data
+	// или название
+	default:
+		url = baseURL + "?наименование=" + data + "&стр=5"
+	}
 
 	// создание массива переменных для хранения ответа
-	var companyJSON []SaveData
+	var companyJSON []BaseData
 
 	// обращение к API
 	resp, err := http.Get(url)
@@ -50,50 +67,6 @@ func GetByName(nameCompany string) ([]SaveData, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	// декодирование []byte в интерфейс
-	err = json.Unmarshal(body, &companyJSON)
-	if err != nil {
-		return companyJSON, err
-	}
-
-	return companyJSON, nil
-}
-
-// GetByOgrn возвращает массив SaveData
-func GetByOgrn(ogrn string) ([]SaveData, error) {
-	url := baseURL + "/интеграция/компании/?огрн=" + ogrn
-
-	var companyJSON []SaveData
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return companyJSON, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	err = json.Unmarshal(body, &companyJSON)
-	if err != nil {
-		return companyJSON, err
-	}
-
-	return companyJSON, nil
-}
-
-// GetByInn возвращает массив SaveData
-func GetByInn(inn string) ([]SaveData, error) {
-	url := baseURL + "/интеграция/компании/?инн=" + inn
-
-	var companyJSON []SaveData
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return companyJSON, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-
 	err = json.Unmarshal(body, &companyJSON)
 	if err != nil {
 		return companyJSON, err

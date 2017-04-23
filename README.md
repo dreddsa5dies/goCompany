@@ -38,7 +38,7 @@ import (
 
 func main() {
 	name := "Ласточка"
-	result, err := gocompany.GetByName(name)
+	result, err := gocompany.GetBaseData(name)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

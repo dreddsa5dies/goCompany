@@ -10,7 +10,7 @@ import (
 func main() {
 	// поиск по имени
 	name := "Ласточка"
-	resultByName, err := gocompany.GetByName(name)
+	resultByName, err := gocompany.GetBaseData(name)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -19,7 +19,7 @@ func main() {
 
 	// поиск по ИНН (тип string)
 	inn := "6820002944"
-	resultByInn, err := gocompany.GetByInn(inn)
+	resultByInn, err := gocompany.GetBaseData(inn)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -28,11 +28,20 @@ func main() {
 
 	// поиск по ОГРН (тип string)
 	ogrn := "1066820016416"
-	resultByOgrn, err := gocompany.GetByOgrn(ogrn)
+	resultByOgrn, err := gocompany.GetBaseData(ogrn)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	fmt.Println(resultByOgrn[0].NAME)
+
+	// при отсутствии информации возвращается пустой массив
+	errGet := "непонятно13212"
+	resultError, err := gocompany.GetBaseData(errGet)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(resultError)
 	os.Exit(0)
 }
