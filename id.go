@@ -1,4 +1,3 @@
-// Package goCompany это Go (golang) пакет для использования ОГРН онлайн(https://ru.rus.company/) API
 package goCompany
 
 import (
