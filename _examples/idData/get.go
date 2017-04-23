@@ -8,9 +8,7 @@ import (
 )
 
 func main() {
-	// поиск по имени
-	id := "7030"
-	resultByID, err := gocompany.GetIDData(id)
+	resultByID, err := gocompany.GetIDData("7030")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -23,10 +23,16 @@ type IDData struct {
 	Email             string `json:"email"`
 	AuthorizedCapital `json:"authorizedCapital"`
 	Address           `json:"address"`
-	MainOkved1        `json:"mainOkved1"`
+	MainOkved         `json:"mainOkved1"`
+	ArrOkved          []Okved `json:"okved1"`
+	PfrRegistration   `json:"pfrRegistration"`
+	FssRegistration   `json:"fssRegistration"`
+	Fns               `json:"fns"`
+	ArrAssignee       []Assignee    `json:"assignee"`
+	ArrPredecessor    []Predecessor `json:"predecessor"`
 }
 
-// Okopf
+// Okopf - Общероссийский классификатор организационно-правовых форм
 type Okopf struct {
 	ID       int    `json:"id"`
 	CODE     string `json:"code"`
@@ -35,24 +41,24 @@ type Okopf struct {
 	Parent   `json:"parent"`
 }
 
-// Parent
+// Parent - ID родителя
 type Parent struct {
 	ID int `json:"id"`
 }
 
-// AuthorizedCapital
+// AuthorizedCapital - Уставной капитал
 type AuthorizedCapital struct {
 	TypeCapital `json:"type"`
 	Value       float64 `json:"value"`
 }
 
-// TypeCapital
+// TypeCapital - Тип уставного капиталаы
 type TypeCapital struct {
 	ID   int    `json:"id"`
 	NAME string `json:"name"`
 }
 
-// Address
+// Address - Адрес
 type Address struct {
 	Region           `json:"region"`
 	Street           `json:"street"`
@@ -64,7 +70,7 @@ type Address struct {
 	FullHouseAddress string `json:"fullHouseAddress"`
 }
 
-// Region
+// Region - Регион
 type Region struct {
 	ID            int    `json:"id"`
 	NAME          string `json:"name"`
@@ -92,7 +98,7 @@ type Region struct {
 	FullName      string `json:"fullName"`
 }
 
-// RegionType
+// RegionType - Тип региона
 type RegionType struct {
 	ID        int    `json:"id"`
 	NAME      string `json:"name"`
@@ -101,7 +107,7 @@ type RegionType struct {
 	Level     int    `json:"level"`
 }
 
-// Street
+// Street - Улица
 type Street struct {
 	ID            int    `json:"id"`
 	NAME          string `json:"name"`
@@ -127,7 +133,7 @@ type Street struct {
 	FullName      string `json:"fullName"`
 }
 
-// StreetType
+// StreetType - Тип улицы
 type StreetType struct {
 	ID        int    `json:"id"`
 	NAME      string `json:"name"`
@@ -136,27 +142,100 @@ type StreetType struct {
 	Level     int    `json:"level"`
 }
 
-// MainOkved1
-type MainOkved1 struct {
-	ID           int    `json:"id"`
-	NAME         string `json:"name"`
-	Code         string `json:"code"`
-	Parent       `json:"parent"`
-	CompanyCount int      `json:"companyCount"`
-	URL          string   `json:"url"`
-	FullName     string   `json:"fullName"`
-	Okved1       []Okved1 `json:"okved1"`
+// MainOkved - Основной вид деятельности
+type MainOkved struct {
+	ID       int    `json:"id"`
+	NAME     string `json:"name"`
+	Code     string `json:"code"`
+	Parent   `json:"parent"`
+	URL      string `json:"url"`
+	FullName string `json:"fullName"`
 }
 
-// Okved1
-type Okved1 struct {
-	ID           int    `json:"id"`
-	NAME         string `json:"name"`
-	Code         string `json:"code"`
-	Parent       `json:"parent"`
-	CompanyCount int    `json:"companyCount"`
-	URL          string `json:"url"`
-	FullName     string `json:"fullName"`
+// Okved - сборник кодов, присвоенных видам деятельности компаний
+type Okved struct {
+	ID          int    `json:"id"`
+	NAME        string `json:"name"`
+	Code        string `json:"code"`
+	Parent      `json:"parent"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	FullName    string `json:"fullName"`
+}
+
+// PfrRegistration - регистрация в ПФР (Пенсионный фонд России)
+type PfrRegistration struct {
+	RegistrationDate string `json:"registrationDate"`
+	Number           string `json:"number"`
+	Pfr              `json:"pfr"`
+}
+
+// Pfr - данные по ПФР
+type Pfr struct {
+	ID       int    `json:"id"`
+	NAME     string `json:"name"`
+	Code     string `json:"code"`
+	FullName string `json:"fullName"`
+}
+
+// FssRegistration - регистрация в Фонде социального страхования (ФСС)
+type FssRegistration struct {
+	RegistrationDate string `json:"registrationDate"`
+	Number           string `json:"number"`
+	Fss              `json:"fss"`
+}
+
+// Fss - ФСС
+type Fss struct {
+	ID       int    `json:"id"`
+	NAME     string `json:"name"`
+	Code     string `json:"code"`
+	FullName string `json:"fullName"`
+}
+
+// Assignee - правопреемник
+type Assignee struct {
+	ID        int    `json:"id"`
+	OGRN      string `json:"ogrn"`
+	NAME      string `json:"name"`
+	ShortName string `json:"shortName"`
+	OgrnDate  string `json:"ogrnDate"`
+	INN       string `json:"inn"`
+	KPP       string `json:"kpp"`
+	URL       string `json:"url"`
+}
+
+// Predecessor - предшественник
+type Predecessor struct {
+	ID        int    `json:"id"`
+	OGRN      string `json:"ogrn"`
+	NAME      string `json:"name"`
+	ShortName string `json:"shortName"`
+	OgrnDate  string `json:"ogrnDate"`
+	INN       string `json:"inn"`
+	KPP       string `json:"kpp"`
+	CloseInfo `json:"closeInfo"`
+	URL       string `json:"url"`
+}
+
+// CloseInfo - информация о закрытии
+type CloseInfo struct {
+	Date        string `json:"date"`
+	CloseReason `json:"closeReason"`
+}
+
+// CloseReason - причина закрытия
+type CloseReason struct {
+	ID int `json:"id"`
+}
+
+// Fns - ФНС (Федеральная налоговая служба)
+type Fns struct {
+	ID         int    `json:"id"`
+	NAME       string `json:"name"`
+	Code       string `json:"code"`
+	AddressFns string `json:"address"`
+	FullName   string `json:"fullName"`
 }
 
 // GetIDData возвращает IDData
