@@ -9,22 +9,10 @@ import (
 // Founders - структура данных об учредителях компании
 type Founders struct {
 	ID          int `json:"id"`
-	Company     `json:"company"`
+	BaseData    `json:"company"`
 	PersonOwner `json:"personOwner"`
 	Price       float64 `json:"price"`
 	OwnerRussia bool    `json:"ownerRussia"`
-}
-
-// Company - данные о компании
-type Company struct {
-	ID        int    `json:"id"`
-	OGRN      string `json:"ogrn"`
-	Name      string `json:"name"`
-	ShortName string `json:"shortName"`
-	OgrnDate  string `json:"ogrnDate"`
-	INN       string `json:"inn"`
-	KPP       string `json:"kpp"`
-	URL       string `json:"url"`
 }
 
 // PersonOwner - данные о владельцах
