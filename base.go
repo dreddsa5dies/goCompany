@@ -30,6 +30,7 @@ type BaseData struct {
 	OGRNDATE  string `json:"ogrnDate"`
 	INN       string `json:"inn"`
 	KPP       string `json:"kpp"`
+	CloseInfo `json:"closeInfo"`
 	URL       string `json:"url"`
 }
 
