@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// GetDepComp Возвращает данные зависимых компаниях от компании с идентификатором {id}
+// GetDepComp Возвращает данные о зависимых компаниях от компании с идентификатором {id}
 func GetDepComp(id string) ([]BaseData, error) {
 	url := baseURL + id + "/зависимые/"
 

@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	baseURL = "https://ru.rus.company/интеграция/компании/"
+	baseURL     = "https://ru.rus.company/интеграция/компании/"
+	baseURLPers = "https://ru.rus.company/интеграция/люди/"
 )
 
 // BaseData структура для базовой информации формата:
