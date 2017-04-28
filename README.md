@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/dreddsa5dies/goCompany.svg?branch=master)](https://travis-ci.org/dreddsa5dies/goCompany) [![Go Report Card](https://goreportcard.com/badge/github.com/dreddsa5dies/goCompany)](https://goreportcard.com/report/github.com/dreddsa5dies/goCompany) [![GORef](https://godoc.org/github.com/dreddsa5dies/goCompany?status.svg)](https://godoc.org/github.com/dreddsa5dies/goCompany)  
+[![Build Status](https://travis-ci.org/dreddsa5dies/goCompany.svg?branch=master)](https://travis-ci.org/dreddsa5dies/goCompany) [![Go Report Card](https://goreportcard.com/badge/github.com/dreddsa5dies/goCompany)](https://goreportcard.com/report/github.com/dreddsa5dies/goCompany) [![GORef](https://godoc.org/github.com/dreddsa5dies/goCompany?status.svg)](https://godoc.org/github.com/dreddsa5dies/goCompany) [![CircleCI Status](https://circleci.com/gh/dreddsa5dies/goCompany.svg?style=shield)](https://circleci.com/gh/dreddsa5dies/goCompany) ![License](https://img.shields.io/badge/License-MIT-blue.svg)   
 
 ![IMAGE](img/goCompany.png)
 
