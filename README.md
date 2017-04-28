@@ -29,7 +29,7 @@ go get github.com/dreddsa5dies/goCompany
 ```
 
 ## Пример использования
-Примеры использования смотрите в [примерах](https://github.com/dreddsa5dies/goCompany/tree/master/_examples)
+Примеры использования смотрите в [примерах](https://github.com/dreddsa5dies/goCompany/tree/master/_examples)  
 Документация по Client [![GORef](https://godoc.org/github.com/dreddsa5dies/goCompany?status.svg)](https://godoc.org/github.com/dreddsa5dies/goCompany)
 ```Go
 package main
