@@ -23,7 +23,7 @@ type IDData struct {
 	AuthorizedCapital `json:"authorizedCapital"`
 	Address           `json:"address"`
 	MainOkved         `json:"mainOkved1"`
-	ArrOkved          []Okved `json:"okved1"`
+	Okved             `json:"okved1"`
 	PfrRegistration   `json:"pfrRegistration"`
 	FssRegistration   `json:"fssRegistration"`
 	Fns               `json:"fns"`
@@ -143,16 +143,18 @@ type StreetType struct {
 
 // MainOkved - Основной вид деятельности
 type MainOkved struct {
-	ID       int    `json:"id"`
-	NAME     string `json:"name"`
-	Code     string `json:"code"`
-	Parent   `json:"parent"`
-	URL      string `json:"url"`
-	FullName string `json:"fullName"`
+	ID           int    `json:"id"`
+	NAME         string `json:"name"`
+	Code         string `json:"code"`
+	Parent       `json:"parent"`
+	Description  string `json:"description"`
+	CompanyCount int    `json:"companyCount"`
+	URL          string `json:"url"`
+	FullName     string `json:"fullName"`
 }
 
 // Okved - сборник кодов, присвоенных видам деятельности компаний
-type Okved struct {
+type Okved []struct {
 	ID          int    `json:"id"`
 	NAME        string `json:"name"`
 	Code        string `json:"code"`

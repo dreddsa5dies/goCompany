@@ -11,6 +11,7 @@ import (
 var (
 	baseURL     = "https://ru.rus.company/интеграция/компании/"
 	baseURLPers = "https://ru.rus.company/интеграция/люди/"
+	baseURLIE   = "https://ru.rus.company/интеграция/ип/"
 )
 
 // BaseData структура для базовой информации формата:
