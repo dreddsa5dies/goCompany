@@ -1,13 +1,20 @@
 // Package goCompany это Go (golang) пакет для использования ОГРН онлайн(https://ru.rus.company/) API
 package goCompany
 
-var (
-	baseURL     = "https://ru.rus.company/интеграция/компании/"
-	baseURLPers = "https://ru.rus.company/интеграция/люди/"
-	baseURLIE   = "https://ru.rus.company/интеграция/ип/"
+import (
+	"net/url"
+	"regexp"
 )
 
-// BaseData структура для базовой информации формата:
+var (
+	// блоки для проверки по регулярному выражению
+	regOgrnip, _ = regexp.Compile(`([0-9]){15}`)
+	regOgrn, _   = regexp.Compile(`([0-9]){13}`)
+	regInn, _    = regexp.Compile(`([0-9]){10,12}`)
+	v            = url.Values{}
+)
+
+// CompanyInfo структура для базовой информации формата:
 // {
 // "id" : "7030",
 // "name" : "АКЦИОНЕРНОЕ ОБЩЕСТВО "ИНСТИТУТ "СТРОЙПРОЕКТ"",
@@ -17,7 +24,7 @@ var (
 // "inn" : "7826688390",
 // "kpp" : "781001001"
 // }
-type BaseData struct {
+type CompanyInfo struct {
 	ID        int    `json:"id"`
 	OGRN      string `json:"ogrn"`
 	NAME      string `json:"name"`
@@ -32,7 +39,7 @@ type BaseData struct {
 // Employees - структура данных об сотрудниках компании
 type Employees struct {
 	ID          int `json:"id"`
-	BaseData    `json:"company"`
+	CompanyInfo `json:"company"`
 	PersonOwner `json:"person"`
 	Post        `json:"post"`
 	PostName    string `json:"postName"`
@@ -50,7 +57,7 @@ type Post struct {
 // Founders - структура данных об учредителях компании
 type Founders struct {
 	ID          int `json:"id"`
-	BaseData    `json:"company"`
+	CompanyInfo `json:"company"`
 	PersonOwner `json:"personOwner"`
 	Price       float64 `json:"price"`
 	OwnerRussia bool    `json:"ownerRussia"`
@@ -284,7 +291,7 @@ type Citizenship struct {
 // Positions - данные о должностях по идентификатору {id}
 type Positions struct {
 	ID          int `json:"id"`
-	BaseData    `json:"company"`
+	CompanyInfo `json:"company"`
 	PersonOwner `json:"person"`
 	Post        `json:"post"`
 	PostName    string `json:"postName"`

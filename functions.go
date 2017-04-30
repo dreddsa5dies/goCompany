@@ -5,36 +5,48 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"regexp"
 )
 
-// GetBaseData возвращает массив BaseData
-func GetBaseData(data string) ([]BaseData, error) {
-	var url string
+func init() {
+	v.Set("baseURL", "https://ru.rus.company/интеграция")
 
-	// блоки для проверки по регулярному выражению
-	regOgrn, _ := regexp.Compile(`([0-9]){13}`)
-	regInn, _ := regexp.Compile(`([0-9]){10,12}`)
+	v.Add("apiURL", "/компании/")
+	v.Add("apiURL", "/люди/")
+	v.Add("apiURL", "/ип/")
+	v.Add("apiURL", "/сотрудники/")
+	v.Add("apiURL", "/компании/")
+	v.Add("apiURL", "/зависимые/")
+	v.Add("apiURL", "/должности/")
+	v.Add("apiURL", "/учредители/")
+
+	v.Add("apiKEY", "?огрн=")
+	v.Add("apiKEY", "?инн=")
+	v.Add("apiKEY", "?наименование=")
+	v.Add("apiKEY", "?огрнип=")
+	v.Add("apiKEY", "?человек=")
+}
+
+// GetCompanyInfo возвращает массив CompanyInfo
+func GetCompanyInfo(data string) ([]CompanyInfo, error) {
+	var url string
 
 	switch {
 	//если это ОГРН
 	case regOgrn.MatchString(data):
-		url = baseURL + "?огрн=" + data
+		url = v.Get("baseURL") + v["apiURL"][0] + v["apiKEY"][0] + data
 	// если это ИНН
 	case regInn.MatchString(data):
-		url = baseURL + "?инн=" + data
+		url = v.Get("baseURL") + v["apiURL"][0] + v["apiKEY"][1] + data
 	// или название
 	default:
-		url = baseURL + "?наименование=" + data + "&стр=5"
+		url = v.Get("baseURL") + v["apiURL"][0] + v["apiKEY"][2] + data + "&стр=5"
 	}
 
-	// создание массива переменных для хранения ответа
-	var companyJSON []BaseData
+	var companyJSON []CompanyInfo
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &companyJSON)
 	if err != nil {
-		return companyJSON, err
+		return nil, err
 	}
 
 	return companyJSON, nil
@@ -42,15 +54,13 @@ func GetBaseData(data string) ([]BaseData, error) {
 
 // GetEmployees Возвращает данные об сотрудниках компании с идентификатором {id}
 func GetEmployees(id string) ([]Employees, error) {
-	url := baseURL + id + "/сотрудники/"
+	url := v.Get("baseURL") + v["apiURL"][0] + id + v["apiURL"][3]
 
-	// создание массива переменных для хранения ответа
 	var companyJSON []Employees
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &companyJSON)
 	if err != nil {
-		return companyJSON, err
+		return nil, err
 	}
 
 	return companyJSON, nil
@@ -60,61 +70,51 @@ func GetEmployees(id string) ([]Employees, error) {
 func GetIndivEntrep(data string) ([]IEData, error) {
 	var url string
 
-	// блоки для проверки по регулярному выражению
-	regOgrnip, _ := regexp.Compile(`([0-9]){15}`)
-	regInn, _ := regexp.Compile(`([0-9]){10,12}`)
-
 	switch {
 	//если это ОГРНИП
 	case regOgrnip.MatchString(data):
-		url = baseURLIE + "?огрнип=" + data
+		url = v.Get("baseURL") + v["apiURL"][2] + v["apiKEY"][3] + data
 	// если это ИНН
 	case regInn.MatchString(data):
-		url = baseURLIE + "?инн=" + data
+		url = v.Get("baseURL") + v["apiURL"][2] + v["apiKEY"][1] + data
 	// или название
 	default:
-		url = baseURLIE + "?человек=" + data
+		url = v.Get("baseURL") + v["apiURL"][2] + v["apiKEY"][4] + data
 	}
 
-	// создание массива переменных для хранения ответа
 	var indiventrepJSON []IEData
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &indiventrepJSON)
 	if err != nil {
-		return indiventrepJSON, err
+		return nil, err
 	}
 
 	return indiventrepJSON, nil
 }
 
 // GetCompFounder Возвращает данные о компаниях, в которых данный человек является учредителем
-func GetCompFounder(id string) ([]BaseData, error) {
-	url := baseURLPers + id + "/компании/"
+func GetCompFounder(id string) ([]CompanyInfo, error) {
+	url := v.Get("baseURL") + v["apiURL"][1] + id + v["apiURL"][0]
 
-	// создание массива переменных для хранения ответа
-	var compsFounderJSON []BaseData
+	var compsFounderJSON []CompanyInfo
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &compsFounderJSON)
 	if err != nil {
-		return compsFounderJSON, err
+		return nil, err
 	}
 
 	return compsFounderJSON, nil
 }
 
 // GetDepComp Возвращает данные о зависимых компаниях от компании с идентификатором {id}
-func GetDepComp(id string) ([]BaseData, error) {
-	url := baseURL + id + "/зависимые/"
+func GetDepComp(id string) ([]CompanyInfo, error) {
+	url := v.Get("baseURL") + v["apiURL"][0] + id + v["apiURL"][5]
 
-	// создание массива переменных для хранения ответа
-	var companyJSON []BaseData
+	var companyJSON []CompanyInfo
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &companyJSON)
 	if err != nil {
-		return companyJSON, err
+		return nil, err
 	}
 
 	return companyJSON, nil
@@ -122,12 +122,10 @@ func GetDepComp(id string) ([]BaseData, error) {
 
 // GetPerson Возвращает данные о человеке с идентификатором {id}
 func GetPerson(id string) (Person, error) {
-	url := baseURLPers + id + "/"
+	url := v.Get("baseURL") + v["apiURL"][1] + id + "/"
 
-	// создание массива переменных для хранения ответа
 	var personJSON Person
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &personJSON)
 	if err != nil {
 		return personJSON, err
@@ -138,15 +136,13 @@ func GetPerson(id string) (Person, error) {
 
 // GetPositions Возвращает данные о должностях с идентификатором {id}
 func GetPositions(id string) ([]Positions, error) {
-	url := baseURLPers + id + "/должности/"
+	url := v.Get("baseURL") + v["apiURL"][1] + id + v["apiURL"][6]
 
-	// создание массива переменных для хранения ответа
 	var personsJSON []Positions
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &personsJSON)
 	if err != nil {
-		return personsJSON, err
+		return nil, err
 	}
 
 	return personsJSON, nil
@@ -154,12 +150,10 @@ func GetPositions(id string) ([]Positions, error) {
 
 // GetIDData возвращает IDData
 func GetIDData(id string) (IDData, error) {
-	url := baseURL + id + "/"
+	url := v.Get("baseURL") + v["apiURL"][0] + id + "/"
 
-	// создание массива переменных для хранения ответа
 	var companyJSON IDData
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &companyJSON)
 	if err != nil {
 		return companyJSON, err
@@ -170,15 +164,13 @@ func GetIDData(id string) (IDData, error) {
 
 // GetFounders Возвращает данные об учредителях компании с идентификатором {id}
 func GetFounders(id string) ([]Founders, error) {
-	url := baseURL + id + "/учредители/"
+	url := v.Get("baseURL") + v["apiURL"][0] + id + v["apiURL"][7]
 
-	// создание массива переменных для хранения ответа
 	var companyJSON []Founders
 
-	// декодирование []byte в интерфейс
 	err := json.Unmarshal(response(url), &companyJSON)
 	if err != nil {
-		return companyJSON, err
+		return nil, err
 	}
 
 	return companyJSON, nil
@@ -187,13 +179,13 @@ func GetFounders(id string) ([]Founders, error) {
 func response(url string) []byte {
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Printf("Ошибка http.Get %v", err)
+		log.Fatalf("Ошибка http.Get %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Ошибка ioutil.ReadAll %v", err)
+		log.Fatalf("Ошибка ioutil.ReadAll %v", err)
 	}
 
 	return body
