@@ -19,6 +19,9 @@
 * Поиск ИП по ОГРНИП
 * Поиcк ИП по ИНН  
 
+## TODO
+* Increase coverage with tests
+
 ## Установка
 ```bash
 go get github.com/dreddsa5dies/goCompany
