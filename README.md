@@ -21,6 +21,7 @@
 
 ## TODO
 * Increase coverage with tests
+* Поиск люди
 
 ## Установка
 ```bash
