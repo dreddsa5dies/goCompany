@@ -3,13 +3,30 @@ package goCompany
 import "testing"
 
 func TestGetCompanyInfo(t *testing.T) {
-	ok := 5990130
-	result, err := GetCompanyInfo("7736002426")
+	okOGRN := 5990130
+	resultOGRN, err := GetCompanyInfo("7736002426")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result[0].ID != ok {
-		t.Fatalf("Want %v, but got %v", result, ok)
+	if resultOGRN[0].ID != okOGRN {
+		t.Fatalf("Want %v, but got %v", resultOGRN, okOGRN)
+	}
+
+	okNAME := 212722
+	resultNAME, err := GetCompanyInfo("СТРОЙПРОЕКТ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultNAME[0].ID != okNAME {
+		t.Fatalf("Want %v, but got %v", resultNAME, okNAME)
+	}
+
+	result, err := GetCompanyInfo("1658064460")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result[0].ID != okNAME {
+		t.Fatalf("Want %v, but got %v", result, okNAME)
 	}
 }
 
