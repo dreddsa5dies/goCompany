@@ -6,7 +6,7 @@ func TestGetCompanyInfo(t *testing.T) {
 	ok := 5990130
 	result, err := GetCompanyInfo("7736002426")
 	if err != nil {
-		t.Fatalf("Want %v, but got %v", result, ok)
+		t.Fatal(err)
 	}
 	if result[0].ID != ok {
 		t.Fatalf("Want %v, but got %v", result, ok)
@@ -17,7 +17,7 @@ func TestGetEmployees(t *testing.T) {
 	ok := 149735376
 	result, err := GetEmployees("32357")
 	if err != nil {
-		t.Fatalf("Want %v, but got %v", result, ok)
+		t.Fatal(err)
 	}
 	if result[0].ID != ok {
 		t.Fatalf("Want %v, but got %v", result, ok)
