@@ -2,9 +2,11 @@ package goCompany
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func init() {
@@ -24,6 +26,9 @@ func init() {
 	v.Add("apiKEY", "?наименование=")
 	v.Add("apiKEY", "?огрнип=")
 	v.Add("apiKEY", "?человек=")
+	v.Add("apiKEY", "?фамилия=")
+	v.Add("apiKEY", "имя=")
+	v.Add("apiKEY", "отчество=")
 }
 
 // GetCompanyInfo возвращает массив CompanyInfo
@@ -174,6 +179,41 @@ func GetFounders(id string) ([]Founders, error) {
 	}
 
 	return companyJSON, nil
+}
+
+// GetSearchPerson - поиск человека по ФИО или ИНН
+// Порядок ввода ФИО - Фамилия, Имя, Отчество
+func GetSearchPerson(data string) ([]PersonOwner, error) {
+	var url string
+
+	switch {
+	// если это ИНН
+	case regInn.MatchString(data):
+		url = v.Get("baseURL") + v["apiURL"][1] + v["apiKEY"][1] + data
+	// или ФИО
+	default:
+		fio := strings.Split(data, " ")
+		// v["apiKEY"][5] - Ф, [6] - И, [7] - О
+		switch {
+		case len(fio) == 1:
+			url = v.Get("baseURL") + v["apiURL"][1] + v["apiKEY"][5] + fio[0]
+		case len(fio) == 2:
+			url = v.Get("baseURL") + v["apiURL"][1] + v["apiKEY"][5] + fio[0] + "&" + v["apiKEY"][6] + fio[1]
+		case len(fio) == 3:
+			url = v.Get("baseURL") + v["apiURL"][1] + v["apiKEY"][5] + fio[0] + "&" + v["apiKEY"][6] + fio[1] + "&" + v["apiKEY"][7] + fio[2]
+		default:
+			fmt.Printf("Неккоректный ввод")
+		}
+	}
+
+	var personJSON []PersonOwner
+
+	err := json.Unmarshal(response(url), &personJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return personJSON, nil
 }
 
 func response(url string) []byte {

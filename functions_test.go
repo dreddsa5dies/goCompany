@@ -78,7 +78,7 @@ func TestGetCompFounder(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result[0].ID != ok {
-		t.Fatalf("Want %v, but got %v", result, ok)
+		t.Fatalf("Want %v, but got %v", result[0].ID, ok)
 	}
 }
 
@@ -89,7 +89,7 @@ func TestGetDepComp(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result[0].ID != ok {
-		t.Fatalf("Want %v, but got %v", result, ok)
+		t.Fatalf("Want %v, but got %v", result[0].ID, ok)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestGetPositions(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result[0].ID != ok {
-		t.Fatalf("Want %v, but got %v", result, ok)
+		t.Fatalf("Want %v, but got %v", result[0].ID, ok)
 	}
 }
 
@@ -133,7 +133,45 @@ func TestGetFounders(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result[0].ID != ok {
-		t.Fatalf("Want %v, but got %v", result, ok)
+		t.Fatalf("Want %v, but got %v", result[0].ID, ok)
+	}
+}
+
+func TestGetSearchPerson(t *testing.T) {
+	ok := 2191023
+	result, err := GetSearchPerson("781010102204")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result[0].ID != ok {
+		t.Fatalf("Want %v, but got %v", result[0].ID, ok)
+	}
+
+	okF := 14340350
+	resultF, err := GetSearchPerson("ЖУРБИН")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultF[0].ID != okF {
+		t.Fatalf("Want %v, but got %v", resultF[0].ID, okF)
+	}
+
+	okFI := 2191023
+	resultFI, err := GetSearchPerson("ЖУРБИН Алексей")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultFI[0].ID != okFI {
+		t.Fatalf("Want %v, but got %v", resultFI[0].ID, okFI)
+	}
+
+	okFIO := 473312
+	resultFIO, err := GetSearchPerson("ЖУРБИН Алексей Николаевич")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultFIO[0].ID != okFIO {
+		t.Fatalf("Want %v, but got %v", resultFI[0].ID, okFIO)
 	}
 }
 
