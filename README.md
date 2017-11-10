@@ -1,63 +1,16 @@
-[![Build Status](https://travis-ci.org/dreddsa5dies/goCompany.svg?branch=master)](https://travis-ci.org/dreddsa5dies/goCompany) [![Go Report Card](https://goreportcard.com/badge/github.com/dreddsa5dies/goCompany)](https://goreportcard.com/report/github.com/dreddsa5dies/goCompany) [![GORef](https://godoc.org/github.com/dreddsa5dies/goCompany?status.svg)](https://godoc.org/github.com/dreddsa5dies/goCompany) [![CircleCI Status](https://circleci.com/gh/dreddsa5dies/goCompany.svg?style=shield)](https://circleci.com/gh/dreddsa5dies/goCompany) ![License](https://img.shields.io/badge/License-MIT-blue.svg) [![codecov](https://codecov.io/gh/dreddsa5dies/goCompany/branch/master/graph/badge.svg)](https://codecov.io/gh/dreddsa5dies/goCompany)  
+# ogrnOnline
+Go (Golang) пакет для работы с API проекта ОГРН.Онлайн (https://огрн.онлайн)
 
-![IMAGE](img/goCompany.png)
+В настоящий момент реализованы все возможности, предоставляемые API, кроме запроса бухгалтерской отчетности компании.
 
-### Go (golang) пакет для использования [ОГРН онлайн](https://ru.rus.company/) API
+## Возможности
+* поиск лиц по заданному параметру (ФИО, наименование, огрн, огрнип, инн)
+* получение информации о юридическом лице по id (полные данные, управленцы, дочерние компании и пр.)
+* получение информации о физическом лице по id (полные данные, места работы, участие в юридических лицах)
 
-## Особенности
-* Поиск компании по Наименованию
-* Поиск компании по ОГРН
-* Поиcк компании по ИНН
-* Получение данных из базы по ID о компании
-* Получение данных из базы по ID о учредителях
-* Получение данных из базы по ID о сотрудниках
-* Получение данных из базы по ID о зависимых организациях
-* Поиск человека по ИНН
-* Поиск человека по ФИО (Фамилии, Имени, ОТчеству)
-* Получение данных из базы по ID о человеке
-* Получение данных из базы по ID о должностях человека
-* Получение данных из базы по ID о компаниях, в которых данный человек является учредителем
-* Поиск ИП по ID
-* Поиск ИП по ОГРНИП
-* Поиcк ИП по ИНН  
+## В планах:
+* структуры и функции, необходимые для получения бухгалтерской отчетности
+* функции для финансового анализа полученной бухгалтерской отчетности
 
 ## Установка
-```bash
-go get github.com/dreddsa5dies/goCompany
-```
-
-## Пример использования
-Примеры использования смотрите в [примерах](https://github.com/dreddsa5dies/goCompany/tree/master/_examples)  
-Документация по Client [![GORef](https://godoc.org/github.com/dreddsa5dies/goCompany?status.svg)](https://godoc.org/github.com/dreddsa5dies/goCompany)
-```Go
-package main
-
-import (
-	"fmt"
-	"os"
-
-	gocompany "github.com/dreddsa5dies/goCompany"
-)
-
-func main() {
-	name := "Ласточка"
-	result, err := gocompany.GetCompanyInfo(name)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println(result)
-	os.Exit(0)
-}
-```
-
-## Лицензия
-Проект под лицензией MIT. Прочитайте LICENSE файл.
-
-## Вклад в проект
-Добро пожаловать, следуйте следующим шагам:
-
-- Форкните (fork) проект на github.com.
-- Создайте новую ветку.
-- Зафиксируйте (commit) изменения в Вашей ветке.
-- Отправьте pull request.
+go get "github.com/tsiporin/ogrnOnline"
