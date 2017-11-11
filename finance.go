@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// Finance - структура, содержащая бухгалтерские балансы за предшествующие годы
-type Finance struct {
+// CompanyFinanceInfo - структура, содержащая бухгалтерские балансы за предшествующие годы
+type CompanyFinanceInfo struct {
 	ID struct {
 		Company struct {
 			ID int `json:"id"`
@@ -278,28 +278,25 @@ type Finance struct {
 	} `json:"company"`
 }
 
-// GetFinance - метод объекта CompanyBaseInfo, возвращающий бухгалтерские балансы за предшествующие годы
-func (c *CompanyBaseInfo) GetFinance() ([]Finance, error) {
+// GenFinance возвращает бухгалтерские балансы юридиеского лица за предшествующие годы по его id
+func GenFinance(id int) ([]CompanyFinanceInfo, error) {
 	var (
 		path   = `/интеграция/компании/`
-		result = []Finance{}
+		result = []CompanyFinanceInfo{}
 		param  = "/финансы/"
 	)
-	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, c.ID, param), nil).String()), &result); err != nil {
+	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
 		return result, err
 	}
 	return result, nil
 }
 
+// GetFinance - метод объекта CompanyBaseInfo, возвращающий бухгалтерские балансы за предшествующие годы
+func (c *CompanyBaseInfo) GetFinance() ([]CompanyFinanceInfo, error) {
+	return GenFinance(c.ID)
+}
+
 // GetFinance - метод объекта CompanyInfo, возвращающий бухгалтерские балансы за предшествующие годы
-func (c *CompanyInfo) GetFinance() ([]Finance, error) {
-	var (
-		path   = `/интеграция/компании/`
-		result = []Finance{}
-		param  = "/финансы/"
-	)
-	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, c.ID, param), nil).String()), &result); err != nil {
-		return result, err
-	}
-	return result, nil
+func (c *CompanyInfo) GetFinance() ([]CompanyFinanceInfo, error) {
+	return GenFinance(c.ID)
 }
