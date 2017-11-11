@@ -84,6 +84,19 @@ func Test_struct_CompanyBranchesInfo_parse(t *testing.T) {
 		t.Errorf("ошибка парсинга: %v", e)
 	}
 }
+func Test_struct_CompanyFinanceInfo_parse(t *testing.T) {
+	p := `./test_json/CompanyFinanceInfo.json`
+	j, e := os.Open(p)
+	if e != nil {
+		t.Skipf("ошибка при открытии файла %s: %v", p, e)
+	}
+	defer j.Close()
+	var obj []CompanyFinanceInfo
+	e = json.NewDecoder(j).Decode(&obj)
+	if e != nil {
+		t.Errorf("ошибка парсинга: %v", e)
+	}
+}
 func Test_struct_PeopleInfo_parse(t *testing.T) {
 	p := `./test_json/PeopleInfo.json`
 	j, e := os.Open(p)
