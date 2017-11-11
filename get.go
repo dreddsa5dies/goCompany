@@ -18,6 +18,8 @@ const (
 	host = `https://огрн.онлайн`
 )
 
+// ПУБЛИЧНЫЕ ФУНКЦИИ
+
 // GetCompany возвращает полную информацию о юридическом лице на основе его id
 func GetCompany(id int) (CompanyInfo, error) {
 	var (
@@ -57,7 +59,7 @@ func GetAssociates(id int) ([]CompanyAssociateInfo, error) {
 	return result, nil
 }
 
-// GetSubCompanies возвращает список зависимых дочерних компаний юридического лица на основе его id
+// GetSubCompanies возвращает список зависимых компаний юридического лица на основе его id
 func GetSubCompanies(id int) ([]CompanyBaseInfo, error) {
 	var (
 		path   = `/интеграция/компании/`
@@ -89,6 +91,19 @@ func GetBranches(id int) ([]CompanyBranchInfo, error) {
 		path   = `/интеграция/компании/`
 		result = []CompanyBranchInfo{}
 		param  = "/филиалы/"
+	)
+	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// GenFinance возвращает бухгалтерские балансы юридиеского лица за предшествующие годы по его id
+func GenFinance(id int) ([]CompanyFinanceInfo, error) {
+	var (
+		path   = `/интеграция/компании/`
+		result = []CompanyFinanceInfo{}
+		param  = "/финансы/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
 		return result, err
@@ -179,6 +194,89 @@ func FindBusinessman(query url.Values) ([]PeopleBusinessmanInfo, error) {
 	}
 	return result, nil
 }
+
+// МЕТОДЫ ОБЪЕКТА CompanyBaseInfo
+
+// GetCompany - метод CompanyBaseInfo, возвращаяющий полную информацию о юридическом лице
+func (c *CompanyBaseInfo) GetCompany() (CompanyInfo, error) {
+	return GetCompany(c.ID)
+}
+
+// GetOwners - метод CompanyBaseInfo, возвращаяющий список участников юридического лица
+func (c *CompanyBaseInfo) GetOwners() ([]CompanyOwnerInfo, error) {
+	return GetOwners(c.ID)
+}
+
+// GetAssociates - метод CompanyBaseInfo, возвращаяющий список управляющих юридического лица
+func (c *CompanyBaseInfo) GetAssociates() ([]CompanyAssociateInfo, error) {
+	return GetAssociates(c.ID)
+}
+
+// GetSubCompanies - метод CompanyBaseInfo, возвращаяющий список зависимых компаний юридического лица
+func (c *CompanyBaseInfo) GetSubCompanies() ([]CompanyBaseInfo, error) {
+	return GetSubCompanies(c.ID)
+}
+
+// GetRepresentativeOffices - метод CompanyBaseInfo, возвращаяющий список представительсв юридического лица
+func (c *CompanyBaseInfo) GetRepresentativeOffices() ([]CompanyBranchInfo, error) {
+	return GetRepresentativeOffices(c.ID)
+}
+
+// GetBranches - метод CompanyBaseInfo, возвращаяющий список филиалов юридического лица
+func (c *CompanyBaseInfo) GetBranches() ([]CompanyBranchInfo, error) {
+	return GetBranches(c.ID)
+}
+
+// GetFinance - метод объекта CompanyBaseInfo, возвращающий бухгалтерские балансы за предшествующие годы
+func (c *CompanyBaseInfo) GetFinance() ([]CompanyFinanceInfo, error) {
+	return GenFinance(c.ID)
+}
+
+// МЕТОДЫ ОБЪЕКТА CompanyInfo
+
+// GetOwners - метод CompanyInfo, возвращаяющий список участников юридического лица
+func (c *CompanyInfo) GetOwners() ([]CompanyOwnerInfo, error) {
+	return GetOwners(c.ID)
+}
+
+// GetAssociates - метод CompanyInfo, возвращаяющий список управляющих юридического лица
+func (c *CompanyInfo) GetAssociates() ([]CompanyAssociateInfo, error) {
+	return GetAssociates(c.ID)
+}
+
+// GetSubCompanies - метод CompanyInfo, возвращаяющий список зависимых компаний юридического лица
+func (c *CompanyInfo) GetSubCompanies() ([]CompanyBaseInfo, error) {
+	return GetSubCompanies(c.ID)
+}
+
+// GetRepresentativeOffices - метод CompanyInfo, возвращаяющий список представительсв юридического лица
+func (c *CompanyInfo) GetRepresentativeOffices() ([]CompanyBranchInfo, error) {
+	return GetRepresentativeOffices(c.ID)
+}
+
+// GetBranches - метод CompanyInfo, возвращаяющий список филиалов юридического лица
+func (c *CompanyInfo) GetBranches() ([]CompanyBranchInfo, error) {
+	return GetBranches(c.ID)
+}
+
+// GetFinance - метод объекта CompanyInfo, возвращающий бухгалтерские балансы за предшествующие годы
+func (c *CompanyInfo) GetFinance() ([]CompanyFinanceInfo, error) {
+	return GenFinance(c.ID)
+}
+
+// МЕТОДЫ ОБЪЕКТА PeopleInfo
+
+// GetJobs - метод PeopleInfo, возвращающий места работы физического лица
+func (p *PeopleInfo) GetJobs() ([]CompanyAssociateInfo, error) {
+	return GetJobs(p.ID)
+}
+
+// GetShare - метод PeopleInfo, возвращающий список компаний c участием физического лица
+func (p *PeopleInfo) GetShare() ([]CompanyBaseInfo, error) {
+	return GetShare(p.ID)
+}
+
+// ПРИВАТНЫЕ ФУНКЦИИ
 
 // createURL формирует URL на основе пути и запроса
 func createURL(path string, query url.Values) *url.URL {
