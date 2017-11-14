@@ -232,38 +232,6 @@ func (c *CompanyBaseInfo) GetFinance() ([]CompanyFinanceInfo, error) {
 	return GenFinance(c.ID)
 }
 
-// МЕТОДЫ ОБЪЕКТА CompanyInfo
-
-// GetOwners - метод CompanyInfo, возвращаяющий список участников юридического лица
-func (c *CompanyInfo) GetOwners() ([]CompanyOwnerInfo, error) {
-	return GetOwners(c.ID)
-}
-
-// GetAssociates - метод CompanyInfo, возвращаяющий список управляющих юридического лица
-func (c *CompanyInfo) GetAssociates() ([]CompanyAssociateInfo, error) {
-	return GetAssociates(c.ID)
-}
-
-// GetSubCompanies - метод CompanyInfo, возвращаяющий список зависимых компаний юридического лица
-func (c *CompanyInfo) GetSubCompanies() ([]CompanyBaseInfo, error) {
-	return GetSubCompanies(c.ID)
-}
-
-// GetRepresentativeOffices - метод CompanyInfo, возвращаяющий список представительсв юридического лица
-func (c *CompanyInfo) GetRepresentativeOffices() ([]CompanyBranchInfo, error) {
-	return GetRepresentativeOffices(c.ID)
-}
-
-// GetBranches - метод CompanyInfo, возвращаяющий список филиалов юридического лица
-func (c *CompanyInfo) GetBranches() ([]CompanyBranchInfo, error) {
-	return GetBranches(c.ID)
-}
-
-// GetFinance - метод объекта CompanyInfo, возвращающий бухгалтерские балансы за предшествующие годы
-func (c *CompanyInfo) GetFinance() ([]CompanyFinanceInfo, error) {
-	return GenFinance(c.ID)
-}
-
 // МЕТОДЫ ОБЪЕКТА PeopleInfo
 
 // GetJobs - метод PeopleInfo, возвращающий места работы физического лица

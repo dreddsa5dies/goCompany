@@ -37,13 +37,14 @@ type CompanyInfo struct {
 
 // CompanyOwnerInfo - информация об участнике юридического лица
 type CompanyOwnerInfo struct {
-	ID           int             `json:"id"`                     // ID
-	Company      CompanyBaseInfo `json:"company"`                // Информация о юридическом лице
-	PersonOwner  PeopleInfo      `json:"personOwner,omitempty"`  // Участник - физическое лицо
-	CompanyOwner CompanyBaseInfo `json:"companyOwner,omitempty"` // Участник - юридическое лицо
-	Price        float64         `json:"price"`                  // Номинальная стоимость доли
-	OwnerRussia  bool            `json:"ownerRussia"`            // Участник - РФ
-	Part         string          `json:"part"`                   // Доля
+	ID                int             `json:"id"`                     // ID
+	Company           CompanyBaseInfo `json:"company"`                // Информация о юридическом лице
+	PersonOwner       PeopleInfo      `json:"personOwner,omitempty"`  // Участник - физическое лицо
+	CompanyOwner      CompanyBaseInfo `json:"companyOwner,omitempty"` // Участник - юридическое лицо
+	StateObjectRegion addressObject   `json:"stateObjectRegion,omitempty"`
+	Price             float64         `json:"price"`       // Номинальная стоимость доли
+	OwnerRussia       bool            `json:"ownerRussia"` // Участник - РФ
+	Part              string          `json:"part"`        // Доля
 }
 
 // CompanyAssociateInfo - информация об управляющих
@@ -346,7 +347,7 @@ type PeopleInfo struct {
 	FirstName       string        `json:"firstName"`       // Имя
 	MiddleName      string        `json:"middleName"`      // Отчество
 	SurName         string        `json:"surName"`         // Фамилия
-	Inn             string        `json:"inn"`             // ИНН
+	INN             string        `json:"inn"`             // ИНН
 	FullName        string        `json:"fullName"`        // Полное имя
 	FullNameWithInn string        `json:"fullNameWithInn"` // Полное имя с ИНН
 	URL             string        `json:"url"`             // URL
@@ -367,7 +368,7 @@ type PeopleBusinessmanInfo struct {
 	OGRN           string        `json:"ogrn"`           // ОГРНИП
 	OgrnDate       string        `json:"ogrnDate"`       // Дата присвоения ОГРНИП
 	Citizenship    citizenship   `json:"citizenship"`    // Гражданство
-	Fns            fns           `json:"fns"`            // Информация об учете в налоговом органе
+	FNS            fns           `json:"fns"`            // Информация об учете в налоговом органе
 	Type           base          `json:"type"`           // Тип
 	License        []interface{} `json:"license"`        // Информация о лицензиях
 }
