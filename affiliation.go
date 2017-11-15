@@ -35,6 +35,76 @@ func (p *PeopleInfo) GetID() int {
 	return p.ID
 }
 
+// GetBranch - метод CompanyBaseInfo возвращающий список связанных Node
+func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
+	aaa := []Node{}
+
+	time.Sleep(time.Millisecond * 700)
+	sub, err := GetSubCompanies(c.ID)
+	if err != nil {
+		return []Node{}, err
+	}
+	if len(sub) != 0 {
+		for i := range sub {
+			aaa = append(aaa, &sub[i])
+		}
+	}
+
+	time.Sleep(time.Millisecond * 700)
+	owners, err := GetOwners(c.ID)
+	if err != nil {
+		return []Node{}, err
+	}
+	if len(owners) != 0 {
+		for i := range owners {
+			if owners[i].CompanyOwner.ID != 0 {
+				aaa = append(aaa, &owners[i].CompanyOwner)
+			}
+			if owners[i].PersonOwner.ID != 0 {
+				aaa = append(aaa, &owners[i].PersonOwner)
+			}
+		}
+	}
+
+	time.Sleep(time.Millisecond * 700)
+	workers, err := GetAssociates(c.ID)
+	if err != nil {
+		return []Node{}, err
+	}
+	if len(workers) != 0 {
+		for i := range workers {
+			aaa = append(aaa, &workers[i].Person)
+		}
+	}
+
+	return aaa, nil
+}
+
+// GetBranch - метод PeopleInfo возвращающий список связанных Node
+func (p *PeopleInfo) GetBranch() ([]Node, error) {
+	aaa := []Node{}
+
+	time.Sleep(time.Millisecond * 700)
+	jobs, err := GetJobs(p.ID)
+	if err != nil {
+		return []Node{}, err
+	}
+	for i := range jobs {
+		aaa = append(aaa, &jobs[i].Company)
+	}
+
+	time.Sleep(time.Millisecond * 700)
+	shares, err := GetShare(p.ID)
+	if err != nil {
+		return []Node{}, err
+	}
+	for i := range shares {
+		aaa = append(aaa, &shares[i])
+	}
+
+	return aaa, nil
+}
+
 // Построитель графа
 func buildGraph(start Node, graph *Graph) error {
 	nodes, err := start.GetBranch()
@@ -57,70 +127,6 @@ func buildGraph(start Node, graph *Graph) error {
 	}
 
 	return nil
-}
-
-// GetBranch - метод CompanyBaseInfo возвращающий список связанных Node
-func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
-	aff := []Node{}
-
-	time.Sleep(time.Millisecond * 700)
-	subCompanies, err := GetSubCompanies(c.ID)
-	if err != nil {
-		return []Node{}, err
-	}
-	for _, subCompany := range subCompanies {
-		aff = append(aff, &subCompany)
-	}
-
-	time.Sleep(time.Millisecond * 700)
-	owners, err := GetOwners(c.ID)
-	if err != nil {
-		return []Node{}, err
-	}
-	for _, owner := range owners {
-		if owner.CompanyOwner.ID != 0 {
-			aff = append(aff, &owner.CompanyOwner)
-		}
-		if owner.PersonOwner.ID != 0 {
-			aff = append(aff, &owner.PersonOwner)
-		}
-	}
-
-	time.Sleep(time.Millisecond * 700)
-	associates, err := GetAssociates(c.ID)
-	if err != nil {
-		return []Node{}, err
-	}
-	for _, people := range associates {
-		aff = append(aff, &people.Person)
-	}
-
-	return aff, nil
-}
-
-// GetBranch - метод PeopleInfo возвращающий список связанных Node
-func (p *PeopleInfo) GetBranch() ([]Node, error) {
-	aff := []Node{}
-
-	time.Sleep(time.Millisecond * 700)
-	jobs, err := GetJobs(p.ID)
-	if err != nil {
-		return []Node{}, err
-	}
-	for _, job := range jobs {
-		aff = append(aff, &job.Company)
-	}
-
-	time.Sleep(time.Millisecond * 700)
-	shares, err := GetShare(p.ID)
-	if err != nil {
-		return []Node{}, err
-	}
-	for _, share := range shares {
-		aff = append(aff, &share)
-	}
-
-	return aff, nil
 }
 
 // NewGraph - метод CompanyBaseInfo, возвращающий новый Graph для юридического лица

@@ -1,35 +1,15 @@
 package ogrnOnline
 
 import (
+	"net/http"
 	"net/url"
-	"reflect"
 	"testing"
+	"time"
 )
 
-func Test_createURL(t *testing.T) {
+func TestIsValidQuery(t *testing.T) {
 	type args struct {
-		path  string
-		query url.Values
-	}
-	tests := []struct {
-		name string
-		args args
-		want *url.URL
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := createURL(tt.args.path, tt.args.query); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("createURL() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_isValidQuery(t *testing.T) {
-	type args struct {
-		q         url.Values
+		query     url.Values
 		typeQuery int
 	}
 	tests := []struct {
@@ -37,32 +17,47 @@ func Test_isValidQuery(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"ошибка в параметре", args{url.Values{"огрн": []string{"1051633025256"}, "ошибка": []string{"1658064460"}}, typeQueryCompany}, true},
+
+		{"юридическое лицо. ok", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"1658064460"}}, typeQueryCompany}, false},
+		{"юридическое лицо. ошибка в ОГРН", args{url.Values{"огрн": []string{"105133025256"}, "инн": []string{"1658064460"}}, typeQueryCompany}, true},
+		{"юридическое лицо. ошибка в ИНН", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"16580664460"}}, typeQueryCompany}, true},
+
+		{"физическое лицо. ok", args{url.Values{"инн": []string{"732812398429"}}, typeQueryPeople}, false},
+		{"физическое лицо. ошибка в ИНН", args{url.Values{"инн": []string{"732814352398429"}}, typeQueryPeople}, true},
+
+		{"предприниматель. ok", args{url.Values{"огрнип": []string{"314272211800010"}, "инн": []string{"272508402480"}}, typeQueryBusinessman}, false},
+		{"предприниматель. ошибка в ОГРНИП", args{url.Values{"огрнип": []string{"3142722110"}, "инн": []string{"272508402480"}}, typeQueryBusinessman}, true},
+		{"предприниматель. ошибка в ИНН", args{url.Values{"огрнип": []string{"314272211800010"}, "инн": []string{"272523442308402480"}}, typeQueryBusinessman}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := isValidQuery(tt.args.q, tt.args.typeQuery); (err != nil) != tt.wantErr {
+			if err := isValidQuery(tt.args.query, tt.args.typeQuery); (err != nil) != tt.wantErr {
 				t.Errorf("isValidQuery() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func Test_getDataFromServer(t *testing.T) {
-	type args struct {
-		url string
-	}
+func TestCreateURL(t *testing.T) {
 	tests := []struct {
-		name string
-		args args
-		want []byte
+		name  string
+		path  string
+		query url.Values
+		ok    bool
 	}{
-	// TODO: Add test cases.
+		{"ok", "/интеграция/ип/", url.Values{"огрнип": []string{"314272211800010"}}, true},
+		{"ошибка", "/интегвыырация/ип/", url.Values{"огрнип": []string{"314272211800010"}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getDataFromServer(tt.args.url); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getDataFromServer() = %v, want %v", got, tt.want)
+			time.Sleep(time.Millisecond * pauseForRequest)
+			resp, err := http.Get(createURL(tt.path, tt.query).String())
+			if err != nil {
+				t.Skipf("непредвиденная ошибка в запросе: %v", err)
+			}
+			if (resp.StatusCode == 200) != tt.ok {
+				t.Errorf("StatusCode = %d", resp.StatusCode)
 			}
 		})
 	}
@@ -75,10 +70,12 @@ func TestFindCompany(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []CompanyBaseInfo
+		wantLen int
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"ok", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"1658064460"}}}, 1, false},
+		{"ok", args{url.Values{"наименование": []string{"цементно-огнеупорный завод"}}}, 4, false},
+		{"ошибка", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"16580664460"}}}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -87,8 +84,8 @@ func TestFindCompany(t *testing.T) {
 				t.Errorf("FindCompany() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FindCompany() = %v, want %v", got, tt.want)
+			if l := len(got); l != tt.wantLen {
+				t.Errorf("FindCompany() = %v, wantLen %v", l, tt.wantLen)
 			}
 		})
 	}
@@ -101,10 +98,12 @@ func TestFindPeople(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []PeopleInfo
+		wantLen int
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"ok", args{url.Values{"инн": []string{"732812398429"}}}, 1, false},
+		{"ok", args{url.Values{"фамилия": []string{"ципорин"}, "имя": []string{"андрей"}}}, 2, false},
+		{"ошибка", args{url.Values{"инн": []string{"73281238429"}}}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -113,8 +112,8 @@ func TestFindPeople(t *testing.T) {
 				t.Errorf("FindPeople() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FindPeople() = %v, want %v", got, tt.want)
+			if l := len(got); l != tt.wantLen {
+				t.Errorf("FindPeople() = %v, wantLen %v", l, tt.wantLen)
 			}
 		})
 	}
@@ -127,10 +126,11 @@ func TestFindBusinessman(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []PeopleBusinessmanInfo
+		wantLen int
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"ok", args{url.Values{"огрнип": []string{"314272211800010"}, "инн": []string{"272508402480"}}}, 1, false},
+		{"ok", args{url.Values{"огрнип": []string{"31422211800010"}, "инн": []string{"272508402480"}}}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -139,476 +139,132 @@ func TestFindBusinessman(t *testing.T) {
 				t.Errorf("FindBusinessman() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FindBusinessman() = %v, want %v", got, tt.want)
+			if l := len(got); l != tt.wantLen {
+				t.Errorf("FindBusinessman() = %v, wantLen %v", l, tt.wantLen)
 			}
 		})
 	}
 }
 
 func TestGetCompany(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetCompany(7030)
+	if err != nil {
+		t.Skipf("GetCompany(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    CompanyInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetCompany(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetCompany() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetCompany() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetCompany(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    CompanyInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetCompany()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetCompany() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetCompany() = %v, want %v", got, tt.want)
-			}
-		})
+	if got.OGRN != "1027810258673" {
+		t.Errorf("GetCompany(): OGRN = %v, want %v", got.OGRN, "1027810258673")
 	}
 }
 
 func TestGetOwners(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetOwners(7030)
+	if err != nil {
+		t.Skipf("GetOwners(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyOwnerInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 6 {
+		t.Fatalf("GetOwners(): len = %v, want 6", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetOwners(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetOwners() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetOwners() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetOwners(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    []CompanyOwnerInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetOwners()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetOwners() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetOwners() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[3].Price != 800.0 {
+		t.Errorf("GetOwners(): Price = %v, want 800.00", got[3].Price)
 	}
 }
 
 func TestGetAssociates(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetAssociates(32357)
+	if err != nil {
+		t.Skipf("GetAssociates(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyAssociateInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 1 {
+		t.Fatalf("GetAssociates(): len = %v, want 1", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetAssociates(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetAssociates() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetAssociates() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetAssociates(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    []CompanyAssociateInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetAssociates()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetAssociates() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetAssociates() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[0].Person.ID != 49758 {
+		t.Errorf("GetAssociates(): Person.ID = %v, want 49758", got[0].Person.ID)
 	}
 }
 
 func TestGetSubCompanies(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetSubCompanies(1198655)
+	if err != nil {
+		t.Skipf("GetSubCompanies(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyBaseInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 6 {
+		t.Fatalf("GetSubCompanies(): len = %v, want 6", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetSubCompanies(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetSubCompanies() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSubCompanies() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetSubCompanies(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    []CompanyBaseInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetSubCompanies()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetSubCompanies() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetSubCompanies() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[5].OGRN != "1156679003909" {
+		t.Errorf("GetSubCompanies(): OGRN = %v, want 1156679003909", got[5].OGRN)
 	}
 }
 
 func TestGetRepresentativeOffices(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetRepresentativeOffices(4527642)
+	if err != nil {
+		t.Skipf("GetRepresentativeOffices(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyBranchInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 1 {
+		t.Fatalf("GetRepresentativeOffices(): len = %v, want 1", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetRepresentativeOffices(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetRepresentativeOffices() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetRepresentativeOffices() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetRepresentativeOffices(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    []CompanyBranchInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetRepresentativeOffices()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetRepresentativeOffices() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetRepresentativeOffices() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[0].ID != 287 {
+		t.Errorf("GetRepresentativeOffices(): ID = %v, want 287", got[0].ID)
 	}
 }
 
 func TestGetBranches(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetBranches(4527642)
+	if err != nil {
+		t.Skipf("GetBranches(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyBranchInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 3 {
+		t.Fatalf("GetBranches(): len = %v, want 3", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetBranches(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetBranches() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetBranches() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetBranches(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    []CompanyBranchInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetBranches()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetBranches() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetBranches() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[1].ID != 289 {
+		t.Errorf("GetBranches(): ID = %v, want 287", got[1].ID)
 	}
 }
 
 func TestGenFinance(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GenFinance(8)
+	if err != nil {
+		t.Skipf("GenFinance(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyFinanceInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 4 {
+		t.Fatalf("GenFinance(): len = %v, want 3", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenFinance(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GenFinance() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GenFinance() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestCompanyBaseInfo_GetFinance(t *testing.T) {
-	tests := []struct {
-		name    string
-		c       *CompanyBaseInfo
-		want    []CompanyFinanceInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetFinance()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CompanyBaseInfo.GetFinance() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompanyBaseInfo.GetFinance() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[1].Company.ID != 8 {
+		t.Errorf("GenFinance(): ID = %v, want 8", got[1].Company.ID)
 	}
 }
 
 func TestGetPeople(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetPeople(2191023)
+	if err != nil {
+		t.Skipf("GetPeople(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    PeopleInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetPeople(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetPeople() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetPeople() = %v, want %v", got, tt.want)
-			}
-		})
+	if got.FirstName != "АЛЕКСЕЙ" {
+		t.Errorf("GetPeople(): FirstName = %s, want АЛЕКСЕЙ", got.FirstName)
 	}
 }
 
 func TestGetJobs(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetJobs(2191023)
+	if err != nil {
+		t.Skipf("GetJobs(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyAssociateInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 5 {
+		t.Fatalf("GetJobs(): len = %v, want 5", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetJobs(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetJobs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetJobs() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[1].Company.OGRN != "1107847114760" {
+		t.Errorf("GetJobs(): OGRN = %s, want 1107847114760", got[1].Company.OGRN)
 	}
 }
-
-func TestPeopleInfo_GetJobs(t *testing.T) {
-	tests := []struct {
-		name    string
-		p       *PeopleInfo
-		want    []CompanyAssociateInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.p.GetJobs()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PeopleInfo.GetJobs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PeopleInfo.GetJobs() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestGetShare(t *testing.T) {
-	type args struct {
-		id int
+	got, err := GetShare(2191023)
+	if err != nil {
+		t.Skipf("GetShare(): %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []CompanyBaseInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	if l := len(got); l != 9 {
+		t.Fatalf("GetShare(): len = %v, want 9", l)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetShare(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetShare() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetShare() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestPeopleInfo_GetShare(t *testing.T) {
-	tests := []struct {
-		name    string
-		p       *PeopleInfo
-		want    []CompanyBaseInfo
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.p.GetShare()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PeopleInfo.GetShare() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PeopleInfo.GetShare() = %v, want %v", got, tt.want)
-			}
-		})
+	if got[1].OGRN != "1037851007424" {
+		t.Errorf("GetShare(): OGRN = %s, want 10271037851007424810258673", got[1].OGRN)
 	}
 }

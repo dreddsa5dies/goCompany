@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
+	"time"
 )
 
 const (
@@ -16,13 +16,59 @@ const (
 	typeQueryBusinessman
 
 	host = `https://огрн.онлайн`
+
+	pauseForRequest = 400
 )
+
+// isValidQuery проверяет параметры запроса на основе его типа
+func isValidQuery(query url.Values, typeQuery int) error {
+	testType := map[int]map[string]bool{
+		typeQueryCompany:     map[string]bool{"огрн": true, "инн": true, "кпп": true, "наименование": true, "стр": true},
+		typeQueryPeople:      map[string]bool{"фамилия": true, "имя": true, "отество": true, "инн": true, "стр": true},
+		typeQueryBusinessman: map[string]bool{"человек": true, "огрнип": true, "инн": true},
+	}
+
+	ogrnBusinessman := regexp.MustCompile(`^[0-9]{15}$`)
+	ogrnCompany := regexp.MustCompile(`^[0-9]{13}$`)
+	innBusinessman := regexp.MustCompile(`^[0-9]{12}$`)
+	innCompany := regexp.MustCompile(`^[0-9]{10}$`)
+
+	if typeQuery != typeQueryCompany && typeQuery != typeQueryPeople && typeQuery != typeQueryBusinessman {
+		panic(fmt.Errorf("isValidQuery: неверный параметр typeQuery: %d", typeQuery))
+	}
+
+	for options := range query {
+		if !testType[typeQuery][options] {
+			return fmt.Errorf(`неверный параметр "%s"`, options)
+		}
+
+		switch {
+		case options == "огрн" && typeQuery == typeQueryCompany:
+			if !ogrnCompany.MatchString(query[options][0]) {
+				return fmt.Errorf("недопустимое значение ОГРН: %s", query[options][0])
+			}
+		case options == "инн" && typeQuery == typeQueryCompany:
+			if !innCompany.MatchString(query[options][0]) {
+				return fmt.Errorf("недопустимое значение ИНН: %s", query[options][0])
+			}
+		case options == "огрнип" && typeQuery == typeQueryBusinessman:
+			if !ogrnBusinessman.MatchString(query[options][0]) {
+				return fmt.Errorf("недопустимое значение ОГРНИП: %s", query[options][0])
+			}
+		case options == "инн" && (typeQuery == typeQueryBusinessman || typeQuery == typeQueryPeople):
+			if !innBusinessman.MatchString(query[options][0]) {
+				return fmt.Errorf("недопустимое значение ИНН: %s", query[options][0])
+			}
+		}
+	}
+	return nil
+}
 
 // createURL формирует URL на основе пути и запроса
 func createURL(path string, query url.Values) *url.URL {
 	ur, err := url.Parse(host)
 	if err != nil {
-		log.Panicf("ошибка парсинга хоста: %v", err)
+		panic(fmt.Errorf("ошибка парсинга хоста: %v", err))
 	}
 	ur.Path = path
 	if query != nil {
@@ -31,59 +77,18 @@ func createURL(path string, query url.Values) *url.URL {
 	return ur
 }
 
-// isValidQuery проверяет параметры запроса на основе его типа
-func isValidQuery(q url.Values, typeQuery int) error {
-	testType := map[int]map[string]bool{
-		typeQueryCompany:     map[string]bool{"огрн": true, "инн": true, "кпп": true, "наименование": true, "стр": true},
-		typeQueryPeople:      map[string]bool{"фамилия": true, "имя": true, "отество": true, "инн": true, "стр": true},
-		typeQueryBusinessman: map[string]bool{"человек": true, "огрнип": true, "инн": true},
-	}
-
-	ogrnBusinessman := regexp.MustCompile(`([0-9]){15}`)
-	ogrnCompany := regexp.MustCompile(`([0-9]){13}`)
-	innBusinessman := regexp.MustCompile(`([0-9]){12}`)
-	innCompany := regexp.MustCompile(`([0-9]){10}`)
-
-	if typeQuery != typeQueryCompany && typeQuery != typeQueryPeople && typeQuery != typeQueryBusinessman {
-		log.Panicf("isValidQuery: неверный параметр typeQuery")
-	}
-	for k := range q {
-		if !testType[typeQuery][k] {
-			return fmt.Errorf(`неверный параметр "%s"`, k)
-		}
-		switch {
-		case k == "огрн" && typeQuery == typeQueryCompany:
-			if !ogrnCompany.MatchString(q[k][0]) {
-				return fmt.Errorf("недопустимое значение ОГРН")
-			}
-		case k == "инн" && typeQuery == typeQueryCompany:
-			if !innCompany.MatchString(q[k][0]) {
-				return fmt.Errorf("недопустимое значение ИНН")
-			}
-		case k == "огрнип" && typeQuery == typeQueryBusinessman:
-			if !ogrnBusinessman.MatchString(q[k][0]) {
-				return fmt.Errorf("недопустимое значение ОГРНИП")
-			}
-		case k == "инн" && (typeQuery == typeQueryBusinessman || typeQuery == typeQueryPeople):
-			if !innBusinessman.MatchString(q[k][0]) {
-				return fmt.Errorf("недопустимое значение ИНН")
-			}
-		}
-	}
-	return nil
-}
-
 // getDataFromServer - базовый запрос, получающий данные от сервера на основе url
 func getDataFromServer(url string) []byte {
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatalf("Ошибка http.Get: %v", err)
+		panic(fmt.Errorf("ошибка запроса к серверу %v", err))
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Panicf("Ошибка ioutil.ReadAll: %v", err)
+		panic(fmt.Errorf("ошибка чтения ответа сервера: %v", err))
 	}
+	time.Sleep(time.Millisecond * pauseForRequest)
 	return body
 }
 
