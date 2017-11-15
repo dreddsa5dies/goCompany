@@ -2,7 +2,6 @@ package ogrnOnline
 
 import (
 	"fmt"
-	"time"
 )
 
 // Node - вершина графа (юридическое или физическое лицо)
@@ -39,7 +38,6 @@ func (p *PeopleInfo) GetID() int {
 func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
 	aaa := []Node{}
 
-	time.Sleep(time.Millisecond * 700)
 	sub, err := GetSubCompanies(c.ID)
 	if err != nil {
 		return []Node{}, err
@@ -50,7 +48,6 @@ func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
 		}
 	}
 
-	time.Sleep(time.Millisecond * 700)
 	owners, err := GetOwners(c.ID)
 	if err != nil {
 		return []Node{}, err
@@ -66,7 +63,6 @@ func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
 		}
 	}
 
-	time.Sleep(time.Millisecond * 700)
 	workers, err := GetAssociates(c.ID)
 	if err != nil {
 		return []Node{}, err
@@ -84,7 +80,6 @@ func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
 func (p *PeopleInfo) GetBranch() ([]Node, error) {
 	aaa := []Node{}
 
-	time.Sleep(time.Millisecond * 700)
 	jobs, err := GetJobs(p.ID)
 	if err != nil {
 		return []Node{}, err
@@ -93,7 +88,6 @@ func (p *PeopleInfo) GetBranch() ([]Node, error) {
 		aaa = append(aaa, &jobs[i].Company)
 	}
 
-	time.Sleep(time.Millisecond * 700)
 	shares, err := GetShare(p.ID)
 	if err != nil {
 		return []Node{}, err
