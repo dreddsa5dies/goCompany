@@ -7,9 +7,9 @@ import (
 
 // Node - вершина графа (юридическое или физическое лицо)
 type Node interface {
+	String() string
 	GetID() int
 	GetBranch() ([]Node, error)
-	String() string
 }
 
 // Graph - граф
@@ -20,9 +20,43 @@ func (c *CompanyBaseInfo) GetID() int {
 	return c.ID
 }
 
+// String - метод CompanyBaseInfo возвращающий информацию о юридическом лице в виде строки
+func (c *CompanyBaseInfo) String() string {
+	return fmt.Sprintf(`%s (ИНН %s)`, c.Name, c.INN)
+}
+
+// String - метод PeopleInfo возвращающий информацию о физическом лице в виде строки
+func (p *PeopleInfo) String() string {
+	return fmt.Sprintf(`%s (ИНН %s)`, p.FullName, p.INN)
+}
+
 // GetID - метод PeopleInfo возвращающий ID физического лица
 func (p *PeopleInfo) GetID() int {
 	return p.ID
+}
+
+// Построитель графа
+func buildGraph(start Node, graph *Graph) error {
+	nodes, err := start.GetBranch()
+	if err != nil {
+		return err
+	}
+
+	(*graph)[start.GetID()] = nodes
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	for _, node := range nodes {
+		if _, inGraph := (*graph)[node.GetID()]; !inGraph {
+			err := buildGraph(node, graph)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // GetBranch - метод CompanyBaseInfo возвращающий список связанных Node
@@ -89,16 +123,6 @@ func (p *PeopleInfo) GetBranch() ([]Node, error) {
 	return aff, nil
 }
 
-// String - метод CompanyBaseInfo возвращающий информацию о юридическом лице в виде строки
-func (c *CompanyBaseInfo) String() string {
-	return fmt.Sprintf(`%s (ИНН %s)`, c.Name, c.INN)
-}
-
-// String - метод PeopleInfo возвращающий информацию о физическом лице в виде строки
-func (p *PeopleInfo) String() string {
-	return fmt.Sprintf(`%s (ИНН %s)`, p.FullName, p.INN)
-}
-
 // NewGraph - метод CompanyBaseInfo, возвращающий новый Graph для юридического лица
 func (c *CompanyBaseInfo) NewGraph() (*Graph, error) {
 	graph := &Graph{}
@@ -111,28 +135,4 @@ func (p *PeopleInfo) NewGraph() (*Graph, error) {
 	graph := &Graph{}
 	err := buildGraph(p, graph)
 	return graph, err
-}
-
-// Построитель графа
-func buildGraph(start Node, graph *Graph) error {
-	nodes, err := start.GetBranch()
-	if err != nil {
-		return err
-	}
-
-	(*graph)[start.GetID()] = nodes
-	if len(nodes) == 0 {
-		return nil
-	}
-
-	for _, node := range nodes {
-		if _, inGraph := (*graph)[node.GetID()]; !inGraph {
-			err := buildGraph(node, graph)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
