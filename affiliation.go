@@ -101,6 +101,7 @@ func (p *PeopleInfo) GetBranch() ([]Node, error) {
 
 // Построитель графа
 func buildGraph(start Node, graph *Graph) error {
+
 	nodes, err := start.GetBranch()
 	if err != nil {
 		return err
