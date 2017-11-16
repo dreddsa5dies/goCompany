@@ -73,7 +73,7 @@ func (c *CompanyInfo) getBranch() ([]Node, error) {
 
 	sub, err := GetSubCompanies(c.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %s: %v", c.ID, err)
+		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
 	}
 	for i := range sub {
 		nodes = append(nodes, &sub[i])
@@ -81,7 +81,7 @@ func (c *CompanyInfo) getBranch() ([]Node, error) {
 
 	owners, err := GetOwners(c.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %s: %v", c.ID, err)
+		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
 	}
 	for i := range owners {
 		if owners[i].CompanyOwner.ID != 0 {
@@ -94,7 +94,7 @@ func (c *CompanyInfo) getBranch() ([]Node, error) {
 
 	workers, err := GetAssociates(c.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %s: %v", c.ID, err)
+		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
 	}
 	for i := range workers {
 		nodes = append(nodes, &workers[i].Person)
@@ -110,7 +110,7 @@ func (p *PeopleInfo) getBranch() ([]Node, error) {
 
 	jobs, err := GetJobs(p.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %s: %v", p.ID, err)
+		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", p.ID, err)
 	}
 	for i := range jobs {
 		nodes = append(nodes, &jobs[i].Company)
@@ -118,7 +118,7 @@ func (p *PeopleInfo) getBranch() ([]Node, error) {
 
 	shares, err := GetShare(p.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %s: %v", p.ID, err)
+		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", p.ID, err)
 	}
 	for i := range shares {
 		nodes = append(nodes, &shares[i])

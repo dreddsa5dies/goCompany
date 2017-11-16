@@ -165,7 +165,7 @@ func GetCompanyFullInfo(id int) (CompanyFullInfo, error) {
 	return result, nil
 }
 
-// GetCompanyFullInfo возвращает полную информацию о юридическом лице
+// GetCompany возвращает полную информацию о юридическом лице
 func (c *CompanyInfo) GetCompany() (CompanyFullInfo, error) {
 	return GetCompanyFullInfo(c.ID)
 }
@@ -285,7 +285,7 @@ func GenFinance(id int) ([]CompanyFinanceInfo, error) {
 	return result, nil
 }
 
-// GenFinance возвращает бухгалтерские балансы юридиеского лица за предшествующие годы
+// GetFinance возвращает бухгалтерские балансы юридиеского лица за предшествующие годы
 func (c *CompanyInfo) GetFinance() ([]CompanyFinanceInfo, error) {
 	return GenFinance(c.ID)
 }
