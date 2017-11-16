@@ -168,3 +168,46 @@ func (p *PeopleInfo) NewGraph() (*Graph, error) {
 	err := buildGraph(p, graph)
 	return graph, err
 }
+
+// inSlice - проверка наличия Node в []Node
+func inSlice(node Node, slice []Node) bool {
+	for _, elem := range slice {
+		if node.GetID() == elem.GetID() {
+			return true
+		}
+	}
+	return false
+}
+
+// findConnectionBetweenNode - обход графа и поиск связей между Node
+func findConnectionBetweenNode(graph *Graph, start, finish Node, connection []Node) []Node {
+	connection = append(connection, start)
+
+	if start.GetID() == finish.GetID() {
+		return connection
+	}
+
+	if _, inGraph := (*graph)[start.GetID()]; !inGraph {
+		return []Node{}
+	}
+
+	for _, node := range (*graph)[start.GetID()] {
+		if !inSlice(node, connection) {
+			testConnection := findConnectionBetweenNode(graph, node, finish, connection)
+			if len(testConnection) != 0 {
+				return testConnection
+			}
+		}
+	}
+	return []Node{}
+}
+
+// FindConnection - метод CompanyBaseInfo, обход графа и поиск связи с finishNode
+func (c *CompanyBaseInfo) FindConnection(graph *Graph, finishNode Node) []Node {
+	return findConnectionBetweenNode(graph, c, finishNode, []Node{})
+}
+
+// FindConnection - метод PeopleInfo, обход графа и поиск связи с finishNode
+func (p *PeopleInfo) FindConnection(graph *Graph, finishNode Node) []Node {
+	return findConnectionBetweenNode(graph, p, finishNode, []Node{})
+}
