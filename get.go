@@ -92,11 +92,17 @@ func getDataFromServer(url string) []byte {
 	return body
 }
 
+// companyNotExist - компания прекратила деятельность
+func companyNotExist(c *CompanyBaseInfo) bool {
+	return c.CloseInfo.Date != ""
+}
+
 // FindCompany осуществляет поиск юридического лица по заданным параметрам
 func FindCompany(query url.Values) ([]CompanyBaseInfo, error) {
 	var (
-		path   = `/интеграция/компании/`
-		result = []CompanyBaseInfo{}
+		path        = `/интеграция/компании/`
+		result      = []CompanyBaseInfo{}
+		cleanResult = []CompanyBaseInfo{}
 	)
 	if err := isValidQuery(query, typeQueryCompany); err != nil {
 		return result, err
@@ -104,7 +110,12 @@ func FindCompany(query url.Values) ([]CompanyBaseInfo, error) {
 	if err := json.Unmarshal(getDataFromServer(createURL(path, query).String()), &result); err != nil {
 		return result, err
 	}
-	return result, nil
+	for _, c := range result {
+		if !companyNotExist(&c) {
+			cleanResult = append(cleanResult, c)
+		}
+	}
+	return cleanResult, nil
 }
 
 // FindPeople осуществляет поиск юридического лица по заданным параметрам
@@ -158,14 +169,20 @@ func (c *CompanyBaseInfo) GetCompany() (CompanyInfo, error) {
 // GetOwners возвращает список участников юридического лица на основе его id
 func GetOwners(id int) ([]CompanyOwnerInfo, error) {
 	var (
-		path   = `/интеграция/компании/`
-		result = []CompanyOwnerInfo{}
-		param  = "/учредители/"
+		path        = `/интеграция/компании/`
+		result      = []CompanyOwnerInfo{}
+		cleanResult = []CompanyOwnerInfo{}
+		param       = "/учредители/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
 		return result, err
 	}
-	return result, nil
+	for _, r := range result {
+		if !companyNotExist(&r.CompanyOwner) {
+			cleanResult = append(cleanResult, r)
+		}
+	}
+	return cleanResult, nil
 }
 
 // GetOwners - метод CompanyBaseInfo, возвращаяющий список участников юридического лица
@@ -194,14 +211,20 @@ func (c *CompanyBaseInfo) GetAssociates() ([]CompanyAssociateInfo, error) {
 // GetSubCompanies возвращает список зависимых компаний юридического лица на основе его id
 func GetSubCompanies(id int) ([]CompanyBaseInfo, error) {
 	var (
-		path   = `/интеграция/компании/`
-		result = []CompanyBaseInfo{}
-		param  = "/зависимые/"
+		path        = `/интеграция/компании/`
+		result      = []CompanyBaseInfo{}
+		cleanResult = []CompanyBaseInfo{}
+		param       = "/зависимые/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
 		return result, err
 	}
-	return result, nil
+	for _, r := range result {
+		if !companyNotExist(&r) {
+			cleanResult = append(cleanResult, r)
+		}
+	}
+	return cleanResult, nil
 }
 
 // GetSubCompanies - метод CompanyBaseInfo, возвращаяющий список зависимых компаний юридического лица
@@ -279,14 +302,20 @@ func GetPeople(id int) (PeopleInfo, error) {
 // GetJobs возвращает места работы физического лица на основе его id
 func GetJobs(id int) ([]CompanyAssociateInfo, error) {
 	var (
-		path   = `/интеграция/люди/`
-		result = []CompanyAssociateInfo{}
-		param  = "/должности/"
+		path        = `/интеграция/люди/`
+		result      = []CompanyAssociateInfo{}
+		cleanResult = []CompanyAssociateInfo{}
+		param       = "/должности/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
 		return result, err
 	}
-	return result, nil
+	for _, r := range result {
+		if !companyNotExist(&r.Company) {
+			cleanResult = append(cleanResult, r)
+		}
+	}
+	return cleanResult, nil
 }
 
 // GetJobs - метод PeopleInfo, возвращающий места работы физического лица
@@ -297,14 +326,20 @@ func (p *PeopleInfo) GetJobs() ([]CompanyAssociateInfo, error) {
 // GetShare возвращает список компаний c участием физического лица на основе его id
 func GetShare(id int) ([]CompanyBaseInfo, error) {
 	var (
-		path   = `/интеграция/люди/`
-		result = []CompanyBaseInfo{}
-		param  = "/компании/"
+		path        = `/интеграция/люди/`
+		result      = []CompanyBaseInfo{}
+		cleanResult = []CompanyBaseInfo{}
+		param       = "/компании/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
 		return result, err
 	}
-	return result, nil
+	for _, r := range result {
+		if !companyNotExist(&r) {
+			cleanResult = append(cleanResult, r)
+		}
+	}
+	return cleanResult, nil
 }
 
 // GetShare - метод PeopleInfo, возвращающий список компаний c участием физического лица

@@ -63,6 +63,23 @@ func TestCreateURL(t *testing.T) {
 	}
 }
 
+func TestCompanyNotExist(t *testing.T) {
+	people, err := GetPeople(8303315)
+	if err != nil {
+		t.Skipf("непредвиденная ошибка в запросе: %v", err)
+	}
+	jobs, err := people.GetJobs()
+	if err != nil {
+		t.Skipf("непредвиденная ошибка в запросе: %v", err)
+	}
+	tests := map[int]bool{4845641: true, 1232624: false, 996613: false, 9837278: false, 1709819: false, 10399542: false, 4909144: false}
+	for _, tt := range jobs {
+		if test := companyNotExist(&tt.Company); test != tests[tt.Company.ID] {
+			t.Errorf("companyNotExist(%s) = %v, want %v", tt.Company.ShortName, test, tests[tt.Company.ID])
+		}
+	}
+}
+
 func TestFindCompany(t *testing.T) {
 	type args struct {
 		query url.Values
@@ -74,7 +91,7 @@ func TestFindCompany(t *testing.T) {
 		wantErr bool
 	}{
 		{"ok", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"1658064460"}}}, 1, false},
-		{"ok", args{url.Values{"наименование": []string{"цементно-огнеупорный завод"}}}, 4, false},
+		{"ok", args{url.Values{"наименование": []string{"цементно-огнеупорный завод"}}}, 1, false},
 		{"ошибка", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"16580664460"}}}, 0, true},
 	}
 	for _, tt := range tests {
@@ -187,11 +204,11 @@ func TestGetSubCompanies(t *testing.T) {
 	if err != nil {
 		t.Skipf("GetSubCompanies(): %v", err)
 	}
-	if l := len(got); l != 6 {
-		t.Fatalf("GetSubCompanies(): len = %v, want 6", l)
+	if l := len(got); l != 4 {
+		t.Fatalf("GetSubCompanies(): len = %v, want 4", l)
 	}
-	if got[5].OGRN != "1156679003909" {
-		t.Errorf("GetSubCompanies(): OGRN = %v, want 1156679003909", got[5].OGRN)
+	if got[2].OGRN != "1026602173201" {
+		t.Errorf("GetSubCompanies(): OGRN = %v, want 1026602173201", got[2].OGRN)
 	}
 }
 
@@ -249,11 +266,11 @@ func TestGetJobs(t *testing.T) {
 	if err != nil {
 		t.Skipf("GetJobs(): %v", err)
 	}
-	if l := len(got); l != 5 {
-		t.Fatalf("GetJobs(): len = %v, want 5", l)
+	if l := len(got); l != 4 {
+		t.Fatalf("GetJobs(): len = %v, want 4", l)
 	}
-	if got[1].Company.OGRN != "1107847114760" {
-		t.Errorf("GetJobs(): OGRN = %s, want 1107847114760", got[1].Company.OGRN)
+	if got[1].Company.OGRN != "1027810258673" {
+		t.Errorf("GetJobs(): OGRN = %s, want 1027810258673", got[1].Company.OGRN)
 	}
 }
 func TestGetShare(t *testing.T) {
@@ -261,10 +278,10 @@ func TestGetShare(t *testing.T) {
 	if err != nil {
 		t.Skipf("GetShare(): %v", err)
 	}
-	if l := len(got); l != 9 {
-		t.Fatalf("GetShare(): len = %v, want 9", l)
+	if l := len(got); l != 4 {
+		t.Fatalf("GetShare(): len = %v, want 4", l)
 	}
-	if got[1].OGRN != "1037851007424" {
-		t.Errorf("GetShare(): OGRN = %s, want 10271037851007424810258673", got[1].OGRN)
+	if got[1].OGRN != "1067847506320" {
+		t.Errorf("GetShare(): OGRN = %s, want 1067847506320", got[1].OGRN)
 	}
 }
