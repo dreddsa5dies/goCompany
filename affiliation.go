@@ -2,6 +2,7 @@ package ogrnOnline
 
 import (
 	"fmt"
+	"sort"
 )
 
 // Node - вершина графа (юридическое или физическое лицо)
@@ -19,19 +20,51 @@ func (c *CompanyBaseInfo) GetID() int {
 	return c.ID
 }
 
+// GetID - метод PeopleInfo возвращающий ID физического лица
+func (p *PeopleInfo) GetID() int {
+	return p.ID
+}
+
 // String - метод CompanyBaseInfo возвращающий информацию о юридическом лице в виде строки
 func (c *CompanyBaseInfo) String() string {
-	return fmt.Sprintf(`%s (ИНН %s)`, c.Name, c.INN)
+	if c.INN != "" {
+		return fmt.Sprintf(`%s (ИНН %s)`, c.Name, c.INN)
+	}
+	return fmt.Sprintf(`%s (ИНН неизвестен)`, c.Name)
 }
 
 // String - метод PeopleInfo возвращающий информацию о физическом лице в виде строки
 func (p *PeopleInfo) String() string {
-	return fmt.Sprintf(`%s (ИНН %s)`, p.FullName, p.INN)
+	if p.INN != "" {
+		return fmt.Sprintf(`%s (ИНН %s)`, p.FullName, p.INN)
+	}
+	return fmt.Sprintf(`%s (ИНН неизвестен)`, p.FullName)
 }
 
-// GetID - метод PeopleInfo возвращающий ID физического лица
-func (p *PeopleInfo) GetID() int {
-	return p.ID
+// sortNode - сортировка []Node по ID
+func sortNode(sliceNode []Node) {
+	if !sort.SliceIsSorted(sliceNode, func(i, j int) bool {
+		return sliceNode[i].GetID() < sliceNode[j].GetID()
+	},
+	) {
+		sort.Slice(sliceNode, func(i, j int) bool {
+			return sliceNode[i].GetID() < sliceNode[j].GetID()
+		})
+	}
+}
+
+// clearSlice - очистка []Node от дублирующих структур
+func clearSlice(sliceNode []Node) []Node {
+	cleanSlice := []Node{}
+	for i := range sliceNode {
+		if i == 0 {
+			cleanSlice = append(cleanSlice, sliceNode[i])
+		}
+		if sliceNode[i].GetID() != cleanSlice[len(cleanSlice)-1].GetID() {
+			cleanSlice = append(cleanSlice, sliceNode[i])
+		}
+	}
+	return cleanSlice
 }
 
 // GetBranch - метод CompanyBaseInfo возвращающий список связанных Node
@@ -72,8 +105,8 @@ func (c *CompanyBaseInfo) GetBranch() ([]Node, error) {
 			aaa = append(aaa, &workers[i].Person)
 		}
 	}
-
-	return aaa, nil
+	sortNode(aaa)
+	return clearSlice(aaa), nil
 }
 
 // GetBranch - метод PeopleInfo возвращающий список связанных Node
@@ -96,7 +129,8 @@ func (p *PeopleInfo) GetBranch() ([]Node, error) {
 		aaa = append(aaa, &shares[i])
 	}
 
-	return aaa, nil
+	sortNode(aaa)
+	return clearSlice(aaa), nil
 }
 
 // Построитель графа
@@ -108,9 +142,6 @@ func buildGraph(start Node, graph *Graph) error {
 	}
 
 	(*graph)[start.GetID()] = nodes
-	if len(nodes) == 0 {
-		return nil
-	}
 
 	for _, node := range nodes {
 		if _, inGraph := (*graph)[node.GetID()]; !inGraph {
