@@ -105,10 +105,10 @@ func FindCompany(query url.Values) ([]CompanyBaseInfo, error) {
 		cleanResult = []CompanyBaseInfo{}
 	)
 	if err := isValidQuery(query, typeQueryCompany); err != nil {
-		return result, err
+		return []CompanyBaseInfo{}, err
 	}
 	if err := json.Unmarshal(getDataFromServer(createURL(path, query).String()), &result); err != nil {
-		return result, err
+		return []CompanyBaseInfo{}, err
 	}
 	for _, c := range result {
 		if !companyNotExist(&c) {
@@ -125,10 +125,10 @@ func FindPeople(query url.Values) ([]PeopleInfo, error) {
 		result = []PeopleInfo{}
 	)
 	if err := isValidQuery(query, typeQueryPeople); err != nil {
-		return result, err
+		return []PeopleInfo{}, err
 	}
 	if err := json.Unmarshal(getDataFromServer(createURL(path, query).String()), &result); err != nil {
-		return result, err
+		return []PeopleInfo{}, err
 	}
 	return result, nil
 }
@@ -140,10 +140,10 @@ func FindBusinessman(query url.Values) ([]PeopleBusinessmanInfo, error) {
 		result = []PeopleBusinessmanInfo{}
 	)
 	if err := isValidQuery(query, typeQueryBusinessman); err != nil {
-		return result, err
+		return []PeopleBusinessmanInfo{}, err
 	}
 	if err := json.Unmarshal(getDataFromServer(createURL(path, query).String()), &result); err != nil {
-		return result, err
+		return []PeopleBusinessmanInfo{}, err
 	}
 	return result, nil
 }
@@ -156,7 +156,7 @@ func GetCompany(id int) (CompanyInfo, error) {
 		param  = "/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return CompanyInfo{}, err
 	}
 	return result, nil
 }
@@ -175,7 +175,7 @@ func GetOwners(id int) ([]CompanyOwnerInfo, error) {
 		param       = "/учредители/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyOwnerInfo{}, err
 	}
 	for _, r := range result {
 		if !companyNotExist(&r.CompanyOwner) {
@@ -198,7 +198,7 @@ func GetAssociates(id int) ([]CompanyAssociateInfo, error) {
 		param  = "/сотрудники/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyAssociateInfo{}, err
 	}
 	return result, nil
 }
@@ -217,7 +217,7 @@ func GetSubCompanies(id int) ([]CompanyBaseInfo, error) {
 		param       = "/зависимые/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyBaseInfo{}, err
 	}
 	for _, r := range result {
 		if !companyNotExist(&r) {
@@ -240,7 +240,7 @@ func GetRepresentativeOffices(id int) ([]CompanyBranchInfo, error) {
 		param  = "/представительства/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyBranchInfo{}, err
 	}
 	return result, nil
 }
@@ -258,7 +258,7 @@ func GetBranches(id int) ([]CompanyBranchInfo, error) {
 		param  = "/филиалы/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyBranchInfo{}, err
 	}
 	return result, nil
 }
@@ -276,7 +276,7 @@ func GenFinance(id int) ([]CompanyFinanceInfo, error) {
 		param  = "/финансы/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyFinanceInfo{}, err
 	}
 	return result, nil
 }
@@ -294,7 +294,7 @@ func GetPeople(id int) (PeopleInfo, error) {
 		param  = "/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return PeopleInfo{}, err
 	}
 	return result, nil
 }
@@ -308,7 +308,7 @@ func GetJobs(id int) ([]CompanyAssociateInfo, error) {
 		param       = "/должности/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyAssociateInfo{}, err
 	}
 	for _, r := range result {
 		if !companyNotExist(&r.Company) {
@@ -332,7 +332,7 @@ func GetShare(id int) ([]CompanyBaseInfo, error) {
 		param       = "/компании/"
 	)
 	if err := json.Unmarshal(getDataFromServer(createURL(fmt.Sprintf(`%s%d%s`, path, id, param), nil).String()), &result); err != nil {
-		return result, err
+		return []CompanyBaseInfo{}, err
 	}
 	for _, r := range result {
 		if !companyNotExist(&r) {

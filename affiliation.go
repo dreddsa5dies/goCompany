@@ -151,7 +151,6 @@ func buildGraph(start Node, graph *Graph) error {
 			}
 		}
 	}
-
 	return nil
 }
 
