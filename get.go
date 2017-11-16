@@ -24,7 +24,7 @@ const (
 func isValidQuery(query url.Values, typeQuery int) error {
 	testType := map[int]map[string]bool{
 		typeQueryCompany:     map[string]bool{"огрн": true, "инн": true, "кпп": true, "наименование": true, "стр": true},
-		typeQueryPeople:      map[string]bool{"фамилия": true, "имя": true, "отество": true, "инн": true, "стр": true},
+		typeQueryPeople:      map[string]bool{"фамилия": true, "имя": true, "отчество": true, "инн": true, "стр": true},
 		typeQueryBusinessman: map[string]bool{"человек": true, "огрнип": true, "инн": true},
 	}
 
