@@ -1,782 +1,287 @@
 package ogrnOnline
 
 import (
-	"encoding/json"
-	"fmt"
+	"net/http"
 	"net/url"
-	"os"
-	"reflect"
 	"testing"
 	"time"
 )
 
-// ПРИВАТНЫЕ ФУНКЦИИ
-func Test_getDataFromServer(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	tests := []struct {
-		num int
-		url string
-	}{
-		{1, `https://xn--c1aubj.xn--80asehdb/%D0%B8%D0%BD%D1%82%D0%B5%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D1%8F/%D0%BB%D1%8E%D0%B4%D0%B8/?%D1%84%D0%B0%D0%BC%D0%B8%D0%BB%D0%B8%D1%8F=%D1%86%D0%B8%D0%BF%D0%BE%D1%80%D0%B8%D0%BD&%D0%B8%D0%BC%D1%8F=%D0%B0%D0%BB%D0%B5%D0%BA%D1%81%D0%B0%D0%BD%D0%B4%D1%80`},
-	}
-	for _, tt := range tests {
-		t.Run(fmt.Sprintf("%d", tt.num), func(t *testing.T) {
-			if resp := getDataFromServer(tt.url); resp == nil {
-				t.Error("resp == nil")
-			}
-		})
-	}
-}
-func Test_createURL(t *testing.T) {
-	t.Parallel()
+func TestIsValidQuery(t *testing.T) {
 	type args struct {
-		path  string
-		query url.Values
-	}
-	tests := []struct {
-		args args
-		want *url.URL
-	}{
-		{
-			args{"/интеграция/компании/7030/учредители/", nil},
-			func() *url.URL {
-				ur, _ := url.Parse(host)
-				ur.Path = "/интеграция/компании/7030/учредители/"
-				return ur
-			}(),
-		},
-		{
-			args{"/интеграция/компании/", url.Values{"инн": []string{"7736002426"}}},
-			func() *url.URL {
-				ur, _ := url.Parse(host)
-				ur.Path = "/интеграция/компании/"
-				ur.RawQuery = url.Values{"инн": []string{"7736002426"}}.Encode()
-				return ur
-			}(),
-		},
-	}
-	for i, tt := range tests {
-		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			if got := createURL(tt.args.path, tt.args.query); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("createURL() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-func Test_isValidQuery(t *testing.T) {
-	t.Parallel()
-	type args struct {
-		u url.Values
-		t int
+		query     url.Values
+		typeQuery int
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"typeQueryCompany. ok", args{url.Values{"огрн": []string{"0000000000000"}}, typeQueryCompany}, false},
-		{"typeQueryCompany. err_1", args{url.Values{"о1грн": []string{""}}, typeQueryCompany}, true},
-		{"typeQueryCompany. err_2", args{url.Values{"огрн": []string{""}, "test": []string{}}, typeQueryCompany}, true},
-		{"typeQueryPeople. ok", args{url.Values{"инн": []string{"000000000000"}}, typeQueryPeople}, false},
-		{"typeQueryPeople. err_1", args{url.Values{"о1грн": []string{""}}, typeQueryPeople}, true},
-		{"typeQueryPeople. err_2", args{url.Values{"огрн": []string{""}, "test": []string{}}, typeQueryPeople}, true},
-		{"typeQueryBusinessman. ok", args{url.Values{"огрнип": []string{"000000000000000"}}, typeQueryBusinessman}, false},
-		{"typeQueryBusinessman. err_1", args{url.Values{"о1грн": []string{""}}, typeQueryBusinessman}, true},
-		{"typeQueryBusinessman. err_2", args{url.Values{"огрн": []string{""}, "test": []string{}}, typeQueryBusinessman}, true},
+		{"ошибка в параметре", args{url.Values{"огрн": []string{"1051633025256"}, "ошибка": []string{"1658064460"}}, typeQueryCompany}, true},
+
+		{"юридическое лицо. ok", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"1658064460"}}, typeQueryCompany}, false},
+		{"юридическое лицо. ошибка в ОГРН", args{url.Values{"огрн": []string{"105133025256"}, "инн": []string{"1658064460"}}, typeQueryCompany}, true},
+		{"юридическое лицо. ошибка в ИНН", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"16580664460"}}, typeQueryCompany}, true},
+
+		{"физическое лицо. ok", args{url.Values{"инн": []string{"732812398429"}}, typeQueryPeople}, false},
+		{"физическое лицо. ошибка в ИНН", args{url.Values{"инн": []string{"732814352398429"}}, typeQueryPeople}, true},
+
+		{"предприниматель. ok", args{url.Values{"огрнип": []string{"314272211800010"}, "инн": []string{"272508402480"}}, typeQueryBusinessman}, false},
+		{"предприниматель. ошибка в ОГРНИП", args{url.Values{"огрнип": []string{"3142722110"}, "инн": []string{"272508402480"}}, typeQueryBusinessman}, true},
+		{"предприниматель. ошибка в ИНН", args{url.Values{"огрнип": []string{"314272211800010"}, "инн": []string{"272523442308402480"}}, typeQueryBusinessman}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := isValidQuery(tt.args.u, tt.args.t); (err != nil) != tt.wantErr {
-				t.Errorf("err:= isValidQuery() = %v, want %v", err, tt.wantErr)
+			if err := isValidQuery(tt.args.query, tt.args.typeQuery); (err != nil) != tt.wantErr {
+				t.Errorf("isValidQuery: error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-// ПОБЛИЧНЫЕ ФУНКЦИИ
+func TestCreateURL(t *testing.T) {
+	tests := []struct {
+		name  string
+		path  string
+		query url.Values
+		ok    bool
+	}{
+		{"ok", "/интеграция/ип/", url.Values{"огрнип": []string{"314272211800010"}}, true},
+		{"ошибка", "/интегвыырация/ип/", url.Values{"огрнип": []string{"314272211800010"}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			time.Sleep(time.Millisecond * pauseForRequest)
+			resp, err := http.Get(createURL(tt.path, tt.query).String())
+			if err != nil {
+				t.Skipf("createURL: непредвиденная ошибка в запросе: %v", err)
+			}
+			if (resp.StatusCode == 200) != tt.ok {
+				t.Errorf("createURL: StatusCode = %d", resp.StatusCode)
+			}
+		})
+	}
+}
+
+func TestCompanyNotExist(t *testing.T) {
+	people, err := GetPeople(8303315)
+	if err != nil {
+		t.Skipf("companyNotExist: непредвиденная ошибка в запросе: %v", err)
+	}
+	jobs, err := people.GetJobs()
+	if err != nil {
+		t.Skipf("companyNotExist: непредвиденная ошибка в запросе: %v", err)
+	}
+	tests := map[int]bool{4845641: true, 1232624: false, 996613: false, 9837278: false, 1709819: false, 10399542: false, 4909144: false}
+	for _, tt := range jobs {
+		if test := companyNotExist(&tt.Company); test != tests[tt.Company.ID] {
+			t.Errorf("companyNotExist = %v, want %v", test, tests[tt.Company.ID])
+		}
+	}
+}
+
 func TestFindCompany(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path  = `./test_json/CompanyBaseInfo.json`
-		query = url.Values{"инн": []string{"7707083893"}}
-		want  = []CompanyBaseInfo{}
-	)
-	res, err := FindCompany(query)
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+	type args struct {
+		query url.Values
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	tests := []struct {
+		name    string
+		args    args
+		wantLen int
+		wantErr bool
+	}{
+		{"ok", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"1658064460"}}}, 1, false},
+		{"ok", args{url.Values{"наименование": []string{"цементно-огнеупорный завод"}}}, 1, false},
+		{"ошибка", args{url.Values{"огрн": []string{"1051633025256"}, "инн": []string{"16580664460"}}}, 0, true},
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FindCompany(tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindCompany error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if l := len(got); l != tt.wantLen {
+				t.Errorf("FindCompany = %v, wantLen %v", l, tt.wantLen)
+			}
+		})
 	}
 }
+
 func TestFindPeople(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path  = `./test_json/PeopleInfo.json`
-		query = url.Values{"фамилия": []string{"ЖУРБИН"}, "имя": []string{"АЛЕКСЕЙ"}}
-		want  = []PeopleInfo{}
-	)
-	res, err := FindPeople(query)
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+	type args struct {
+		query url.Values
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	tests := []struct {
+		name    string
+		args    args
+		wantLen int
+		wantErr bool
+	}{
+		{"ok", args{url.Values{"инн": []string{"732812398429"}}}, 1, false},
+		{"ok", args{url.Values{"фамилия": []string{"ципорин"}, "имя": []string{"андрей"}}}, 2, false},
+		{"ошибка", args{url.Values{"инн": []string{"73281238429"}}}, 0, true},
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FindPeople(tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindPeople error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if l := len(got); l != tt.wantLen {
+				t.Errorf("FindPeople = %v, wantLen %v", l, tt.wantLen)
+			}
+		})
 	}
 }
+
 func TestFindBusinessman(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path  = `./test_json/PeopleBusinessmanInfo.json`
-		query = url.Values{"огрнип": []string{"314272211800010"}}
-		want  = []PeopleBusinessmanInfo{}
-	)
-	res, err := FindBusinessman(query)
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+	type args struct {
+		query url.Values
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	tests := []struct {
+		name    string
+		args    args
+		wantLen int
+		wantErr bool
+	}{
+		{"ok", args{url.Values{"огрнип": []string{"314272211800010"}, "инн": []string{"272508402480"}}}, 1, false},
+		{"ok", args{url.Values{"огрнип": []string{"31422211800010"}, "инн": []string{"272508402480"}}}, 0, true},
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FindBusinessman(tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindBusinessman error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if l := len(got); l != tt.wantLen {
+				t.Errorf("FindBusinessman = %v, wantLen %v", l, tt.wantLen)
+			}
+		})
 	}
 }
+
 func TestGetCompany(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyInfo.json`
-		want = CompanyInfo{}
-	)
-	res, err := GetCompany(7030)
+	got, err := GetCompanyFullInfo(7030)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetCompanyFullInfo: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got.OGRN != "1027810258673" {
+		t.Errorf("GetCompanyFullInfo: OGRN = %v, want %v", got.OGRN, "1027810258673")
 	}
 }
 
 func TestGetOwners(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyOwnersInfo.json`
-		want = []CompanyOwnerInfo{}
-	)
-	res, err := GetOwners(7030)
+	got, err := GetOwners(7030)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetOwners: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 6 {
+		t.Fatalf("GetOwners: len = %v, want 6", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[3].Price != 800.0 {
+		t.Errorf("GetOwners: Price = %v, want 800.00", got[3].Price)
 	}
 }
 
 func TestGetAssociates(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyAssociateInfo.json`
-		want = []CompanyAssociateInfo{}
-	)
-	res, err := GetAssociates(32357)
+	got, err := GetAssociates(32357)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetAssociates: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 1 {
+		t.Fatalf("GetAssociates: len = %v, want 1", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[0].Person.ID != 49758 {
+		t.Errorf("GetAssociates: Person.ID = %v, want 49758", got[0].Person.ID)
 	}
 }
+
 func TestGetSubCompanies(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanySubCompaniesInfo.json`
-		want = []CompanyBaseInfo{}
-	)
-	res, err := GetSubCompanies(7030)
+	got, err := GetSubCompanies(1198655)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetSubCompanies: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 4 {
+		t.Fatalf("GetSubCompanies: len = %v, want 4", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[2].OGRN != "1026602173201" {
+		t.Errorf("GetSubCompanies: OGRN = %v, want 1026602173201", got[2].OGRN)
 	}
 }
+
 func TestGetRepresentativeOffices(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyRepresentativeOfficesInfo.json`
-		want = []CompanyBranchInfo{}
-	)
-	res, err := GetRepresentativeOffices(4527642)
+	got, err := GetRepresentativeOffices(4527642)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetRepresentativeOffices: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 1 {
+		t.Fatalf("GetRepresentativeOffices: len = %v, want 1", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[0].ID != 287 {
+		t.Errorf("GetRepresentativeOffices: ID = %v, want 287", got[0].ID)
 	}
 }
+
 func TestGetBranches(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyBranchesInfo.json`
-		want = []CompanyBranchInfo{}
-	)
-	res, err := GetBranches(4527642)
+	got, err := GetBranches(4527642)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetBranches: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 3 {
+		t.Fatalf("GetBranches: len = %v, want 3", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[1].ID != 289 {
+		t.Errorf("GetBranches: ID = %v, want 287", got[1].ID)
 	}
 }
+
 func TestGenFinance(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyFinanceInfo.json`
-		want = []CompanyFinanceInfo{}
-	)
-	res, err := GenFinance(8)
+	got, err := GenFinance(8)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GenFinance: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 4 {
+		t.Fatalf("GenFinance: len = %v, want 3", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[1].Company.ID != 8 {
+		t.Errorf("GenFinance: ID = %v, want 8", got[1].Company.ID)
 	}
 }
+
 func TestGetPeople(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/PeopleInfo.json`
-		want = PeopleInfo{}
-	)
-	res, err := GetPeople(2191023)
+	got, err := GetPeople(2191023)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetPeople: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got.FirstName != "АЛЕКСЕЙ" {
+		t.Errorf("GetPeople: FirstName = %s, want АЛЕКСЕЙ", got.FirstName)
 	}
 }
+
 func TestGetJobs(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/PeopleJobsInfo.json`
-		want = []CompanyAssociateInfo{}
-	)
-	res, err := GetJobs(2191023)
+	got, err := GetJobs(2191023)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetJobs: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 4 {
+		t.Fatalf("GetJobs: len = %v, want 4", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[1].Company.OGRN != "1027810258673" {
+		t.Errorf("GetJobs: OGRN = %s, want 1027810258673", got[1].Company.OGRN)
 	}
 }
 func TestGetShare(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/PeopleShareInfo.json`
-		want = []CompanyBaseInfo{}
-	)
-	res, err := GetShare(2191023)
+	got, err := GetShare(2191023)
 	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
+		t.Skipf("GetShare: %v", err)
 	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
+	if l := len(got); l != 4 {
+		t.Fatalf("GetShare: len = %v, want 4", l)
 	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-
-// МЕТОДЫ ОБЪЕКТА CompanyBaseInfo
-func Test_CompanyBaseInfo_GetCompany(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyInfo.json`
-		want = CompanyInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 7030
-	res, err := obj.GetCompany()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyBaseInfo_GetOwners(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyOwnersInfo.json`
-		want = []CompanyOwnerInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 7030
-	res, err := obj.GetOwners()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyBaseInfo_GetAssociates(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyAssociateInfo.json`
-		want = []CompanyAssociateInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 32357
-	res, err := obj.GetAssociates()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyBaseInfo_GetSubCompanies(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanySubCompaniesInfo.json`
-		want = []CompanyBaseInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 7030
-	res, err := obj.GetSubCompanies()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyBaseInfo_GetRepresentativeOffices(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyRepresentativeOfficesInfo.json`
-		want = []CompanyBranchInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 4527642
-	res, err := obj.GetRepresentativeOffices()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyBaseInfo_GetBranches(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyBranchesInfo.json`
-		want = []CompanyBranchInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 4527642
-	res, err := obj.GetBranches()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyBaseInfo_GenFinance(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyFinanceInfo.json`
-		want = []CompanyFinanceInfo{}
-	)
-	obj := CompanyBaseInfo{}
-	obj.ID = 8
-	res, err := obj.GetFinance()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-
-// МЕТОДЫ ОБЪЕКТА CompanyInfo
-func Test_CompanyInfo_GetOwners(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyOwnersInfo.json`
-		want = []CompanyOwnerInfo{}
-	)
-	obj := CompanyInfo{}
-	obj.ID = 7030
-	res, err := obj.GetOwners()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyInfo_GetAssociates(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyAssociateInfo.json`
-		want = []CompanyAssociateInfo{}
-	)
-	obj := CompanyInfo{}
-	obj.ID = 32357
-	res, err := obj.GetAssociates()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyInfo_GetSubCompanies(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanySubCompaniesInfo.json`
-		want = []CompanyBaseInfo{}
-	)
-	obj := CompanyInfo{}
-	obj.ID = 7030
-	res, err := obj.GetSubCompanies()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyInfo_GetRepresentativeOffices(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyRepresentativeOfficesInfo.json`
-		want = []CompanyBranchInfo{}
-	)
-	obj := CompanyInfo{}
-	obj.ID = 4527642
-	res, err := obj.GetRepresentativeOffices()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyInfo_GetBranches(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyBranchesInfo.json`
-		want = []CompanyBranchInfo{}
-	)
-	obj := CompanyInfo{}
-	obj.ID = 4527642
-	res, err := obj.GetBranches()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_CompanyInfo_GenFinance(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/CompanyFinanceInfo.json`
-		want = []CompanyFinanceInfo{}
-	)
-	obj := CompanyInfo{}
-	obj.ID = 8
-	res, err := obj.GetFinance()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-
-// МЕТОДЫ ОБЪЕКТА PeopleInfo
-
-func Test_PeopleInfo_GetJobs(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/PeopleJobsInfo.json`
-		want = []CompanyAssociateInfo{}
-	)
-	obj := PeopleInfo{}
-	obj.ID = 2191023
-	res, err := obj.GetJobs()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
-	}
-}
-func Test_PeopleInfo_GetShare(t *testing.T) {
-	time.Sleep(time.Millisecond * 600)
-	var (
-		path = `./test_json/PeopleShareInfo.json`
-		want = []CompanyBaseInfo{}
-	)
-	obj := PeopleInfo{}
-	obj.ID = 2191023
-	res, err := obj.GetShare()
-	if err != nil {
-		t.Errorf("ошибка функции: %v", err)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		t.Skipf("ошибка открытия файла: %v", err)
-	}
-	defer file.Close()
-	err = json.NewDecoder(file).Decode(&want)
-	if err != nil {
-		t.Skipf("ошибка парсинга файла: %v", err)
-	}
-	if !reflect.DeepEqual(res, want) {
-		t.Errorf("res == %v, want %v", res, want)
+	if got[1].OGRN != "1067847506320" {
+		t.Errorf("GetShare: OGRN = %s, want 1067847506320", got[1].OGRN)
 	}
 }

@@ -1,7 +1,7 @@
 package ogrnOnline
 
-// CompanyBaseInfo - базовая информация о юридическом лице
-type CompanyBaseInfo struct {
+// CompanyInfo - базовая информация о юридическом лице
+type CompanyInfo struct {
 	ID          int       `json:"id"`                    // ID
 	OGRN        string    `json:"ogrn"`                  // ОГРН
 	Name        string    `json:"name"`                  // Полное наименование
@@ -14,15 +14,15 @@ type CompanyBaseInfo struct {
 	CloseInfo   closeInfo `json:"closeInfo,omitempty"`   // Cведения о прекращении деятельности
 }
 
-// CompanyInfo - полная информация о юридическом лице
-type CompanyInfo struct {
-	CompanyBaseInfo
+// CompanyFullInfo - полная информация о юридическом лице
+type CompanyFullInfo struct {
+	CompanyInfo
 	Address             address           `json:"address"`                       // Адрес
 	Email               string            `json:"email,omitempty"`               // Email
 	AuthorizedCapital   authorizedCapital `json:"authorizedCapital,omitempty"`   // Уставной капитал
 	LastUpdateDate      string            `json:"lastUpdateDate"`                // Дата последнего обновления информации
-	Assignee            []CompanyBaseInfo `json:"assignee"`                      // Правопреемники
-	Predecessor         []CompanyBaseInfo `json:"predecessor"`                   // Правопредшественники
+	Assignee            []CompanyInfo     `json:"assignee"`                      // Правопреемники
+	Predecessor         []CompanyInfo     `json:"predecessor"`                   // Правопредшественники
 	MainOkved           okved             `json:"mainOkved,omitempty"`           // Главный ОКВЭД
 	MainOkved1          okved             `json:"mainOkved1,omitempty"`          // Главный ОКВЭД 1
 	MainOkved2          okved             `json:"mainOkved2,omitempty"`          // Главный ОКВЭД 2
@@ -32,29 +32,30 @@ type CompanyInfo struct {
 	Fns                 fns               `json:"fns,omitempty"`                 // Cведения об учете в налоговом органе
 	PfrRegistration     pfrRegistration   `json:"pfrRegistration,omitempty"`     // Сведения о регистрации в ПФР
 	FssRegistration     fssRegistration   `json:"fssRegistration,omitempty"`     // Сведения о регистрации в ФСС
-	StockRegisterHolder CompanyBaseInfo   `json:"stockRegisterHolder,omitempty"` // Сведения о регистраторе ценных бумаг
+	StockRegisterHolder CompanyInfo       `json:"stockRegisterHolder,omitempty"` // Сведения о регистраторе ценных бумаг
 }
 
 // CompanyOwnerInfo - информация об участнике юридического лица
 type CompanyOwnerInfo struct {
-	ID           int             `json:"id"`                     // ID
-	Company      CompanyBaseInfo `json:"company"`                // Информация о юридическом лице
-	PersonOwner  PeopleInfo      `json:"personOwner,omitempty"`  // Участник - физическое лицо
-	CompanyOwner CompanyBaseInfo `json:"companyOwner,omitempty"` // Участник - юридическое лицо
-	Price        float64         `json:"price"`                  // Номинальная стоимость доли
-	OwnerRussia  bool            `json:"ownerRussia"`            // Участник - РФ
-	Part         string          `json:"part"`                   // Доля
+	ID                int           `json:"id"`                     // ID
+	Company           CompanyInfo   `json:"company"`                // Информация о юридическом лице
+	PersonOwner       PeopleInfo    `json:"personOwner,omitempty"`  // Участник - физическое лицо
+	CompanyOwner      CompanyInfo   `json:"companyOwner,omitempty"` // Участник - юридическое лицо
+	StateObjectRegion addressObject `json:"stateObjectRegion,omitempty"`
+	Price             float64       `json:"price"`       // Номинальная стоимость доли
+	OwnerRussia       bool          `json:"ownerRussia"` // Участник - РФ
+	Part              string        `json:"part"`        // Доля
 }
 
 // CompanyAssociateInfo - информация об управляющих
 type CompanyAssociateInfo struct {
-	ID            int             `json:"id"`            // ID
-	Company       CompanyBaseInfo `json:"company"`       // Информация о юридическом лице
-	Person        PeopleInfo      `json:"person"`        // Информация об управляющем
-	Post          base            `json:"post"`          // Информация о должности
-	PostName      string          `json:"postName"`      // Наименование должности
-	Phone         string          `json:"phone"`         // Телефон
-	Unreliability []interface{}   `json:"unreliability"` //
+	ID            int           `json:"id"`            // ID
+	Company       CompanyInfo   `json:"company"`       // Информация о юридическом лице
+	Person        PeopleInfo    `json:"person"`        // Информация об управляющем
+	Post          base          `json:"post"`          // Информация о должности
+	PostName      string        `json:"postName"`      // Наименование должности
+	Phone         string        `json:"phone"`         // Телефон
+	Unreliability []interface{} `json:"unreliability"` //
 }
 
 // CompanyBranchInfo - филиал / представительство юридического лица
@@ -346,7 +347,7 @@ type PeopleInfo struct {
 	FirstName       string        `json:"firstName"`       // Имя
 	MiddleName      string        `json:"middleName"`      // Отчество
 	SurName         string        `json:"surName"`         // Фамилия
-	Inn             string        `json:"inn"`             // ИНН
+	INN             string        `json:"inn"`             // ИНН
 	FullName        string        `json:"fullName"`        // Полное имя
 	FullNameWithInn string        `json:"fullNameWithInn"` // Полное имя с ИНН
 	URL             string        `json:"url"`             // URL
@@ -367,7 +368,7 @@ type PeopleBusinessmanInfo struct {
 	OGRN           string        `json:"ogrn"`           // ОГРНИП
 	OgrnDate       string        `json:"ogrnDate"`       // Дата присвоения ОГРНИП
 	Citizenship    citizenship   `json:"citizenship"`    // Гражданство
-	Fns            fns           `json:"fns"`            // Информация об учете в налоговом органе
+	FNS            fns           `json:"fns"`            // Информация об учете в налоговом органе
 	Type           base          `json:"type"`           // Тип
 	License        []interface{} `json:"license"`        // Информация о лицензиях
 }
