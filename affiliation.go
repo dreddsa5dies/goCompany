@@ -170,35 +170,91 @@ func inSlice(node Node, sliceNode []Node) bool {
 	return false
 }
 
-// findConnectionBetweenNode обходит граф и ищет связи между Node
-func findConnectionBetweenNode(graph *Graph, start, finish Node, connection []Node) []Node {
+// findConnectionBetweenNodes возвращает true если связь между Node есть
+func findConnectionBetweenNodes(graph *Graph, start, finish Node, connection []Node) bool {
+	// Если стартовой Node нет в Graph, возвращается false
+	if _, inGraph := (*graph)[start.getID()]; !inGraph {
+		return false
+	}
+
+	// Стартовая Node добавляется в список просмотренных
 	connection = append(connection, start)
 
+	// При совпадении стартовой и финишной Node возвращется результат true
 	if start.getID() == finish.getID() {
-		return connection
+		return true
 	}
 
-	if _, inGraph := (*graph)[start.getID()]; !inGraph {
-		return []Node{}
-	}
-
+	/*
+		Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
+		рекурсивно запускается функция findConnectionBetweenNodes.
+		Положтельный результат влечет возврат true, отсутствие результата - false.
+	*/
 	for _, node := range (*graph)[start.getID()] {
 		if !inSlice(node, connection) {
-			testConnection := findConnectionBetweenNode(graph, node, finish, connection)
-			if len(testConnection) != 0 {
-				return testConnection
+			if findConnectionBetweenNodes(graph, node, finish, connection) {
+				return true
 			}
 		}
 	}
-	return []Node{}
+
+	return false
 }
 
-// FindConnection обходит граф и ищет связи с finishNode
-func (c *CompanyInfo) FindConnection(graph *Graph, finishNode Node) []Node {
-	return findConnectionBetweenNode(graph, c, finishNode, []Node{})
+// findAllConnectionBetweenNode обходит граф и ищет связи между Node
+func findAllConnectionBetweenNode(graph *Graph, start, finish Node, connection []Node) [][]Node {
+	// Если стартовой Node нет в Graph, возвращается пустой [][]Node
+	if _, inGraph := (*graph)[start.getID()]; !inGraph {
+		return [][]Node{}
+	}
+
+	// Стартовая Node добавляется в список просмотренных
+	connection = append(connection, start)
+
+	// При совпадении стартовой и финишной Node возвращется текущая цепочка Node, обернутая в [][]Node
+	if start.getID() == finish.getID() {
+		return [][]Node{connection}
+	}
+
+	// Создается [][]Node для всех найденных связей
+	connections := [][]Node{}
+
+	/*
+		Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
+		рекурсивно запускается функция findAllConnectionBetweenNode.
+		Положтельный результат вкладывадывается в общий слайс.
+	*/
+	for _, node := range (*graph)[start.getID()] {
+		if !inSlice(node, connection) {
+			newConnection := findAllConnectionBetweenNode(graph, node, finish, connection)
+			if len(newConnection) != 0 {
+				for _, connect := range newConnection {
+					connections = append(connections, connect)
+				}
+			}
+		}
+	}
+
+	// Накопленый слайс возвращается
+	return connections
 }
 
-// FindConnection обходит граф и ищет связи с finishNode
-func (p *PeopleInfo) FindConnection(graph *Graph, finishNode Node) []Node {
-	return findConnectionBetweenNode(graph, p, finishNode, []Node{})
+// ConnectionIsExist обходит граф и ищет связь с finishNode. По результату возвращает bool
+func (c *CompanyInfo) ConnectionIsExist(graph *Graph, finishNode Node) bool {
+	return findConnectionBetweenNodes(graph, c, finishNode, []Node{})
+}
+
+// ConnectionIsExist обходит граф и ищет связь с finishNode. По результату возвращает bool
+func (p *PeopleInfo) ConnectionIsExist(graph *Graph, finishNode Node) bool {
+	return findConnectionBetweenNodes(graph, p, finishNode, []Node{})
+}
+
+// FindAllConnections обходит граф и возвращает все возможные связи между Node
+func (c *CompanyInfo) FindAllConnections(graph *Graph, finishNode Node) [][]Node {
+	return findAllConnectionBetweenNode(graph, c, finishNode, []Node{})
+}
+
+// FindAllConnections обходит граф и возвращает все возможные связи между Node
+func (p *PeopleInfo) FindAllConnections(graph *Graph, finishNode Node) [][]Node {
+	return findAllConnectionBetweenNode(graph, p, finishNode, []Node{})
 }

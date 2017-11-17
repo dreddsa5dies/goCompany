@@ -130,39 +130,7 @@ func TestGetBranch(t *testing.T) {
 	}
 }
 
-func TestFindConnectionBetweenNode(t *testing.T) {
-	graph := &Graph{
-		1: []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
-		2: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}},
-		3: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}, &PeopleInfo{ID: 6}},
-		4: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 6}},
-		5: []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 7}},
-		6: []Node{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
-		7: []Node{&PeopleInfo{ID: 5}},
-		8: []Node{},
-	}
-	tests := []struct {
-		name   string
-		start  int
-		finish int
-		want   bool
-	}{
-		{"1 -> 7", 1, 7, true},
-		{"5 -> 1", 5, 1, true},
-		{"2 -> 4", 2, 4, true},
-		{"1 -> 8", 1, 8, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			connection := findConnectionBetweenNode(graph, &PeopleInfo{ID: tt.start}, &PeopleInfo{ID: tt.finish}, []Node{})
-			if l := (len(connection) != 0); l != tt.want {
-				t.Errorf("findConnectionBetweenNode: %d -> %d == %v, want %v", tt.start, tt.finish, l, tt.want)
-			}
-		})
-	}
-}
-
-func TestFindConnection(t *testing.T) {
+func TestConnectionIsExist(t *testing.T) {
 	graph := &Graph{
 		1: []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
 		2: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}},
@@ -188,9 +156,46 @@ func TestFindConnection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			start := &PeopleInfo{ID: tt.start}
 			finish := &PeopleInfo{ID: tt.finish}
-			connection := start.FindConnection(graph, finish)
-			if l := (len(connection) != 0); l != tt.want {
-				t.Errorf("FindConnection: %d -> %d == %v, want %v", tt.start, tt.finish, l, tt.want)
+			if connect := start.ConnectionIsExist(graph, finish); connect != tt.want {
+				t.Errorf("ConnectionIsExist: %d -> %d == %v, want %v", tt.start, tt.finish, connect, tt.want)
+			}
+		})
+	}
+}
+
+func TestFindAllConnections(t *testing.T) {
+	graph := &Graph{
+		1:  []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}, &PeopleInfo{ID: 5}},
+		2:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 9}},
+		3:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 4}, &PeopleInfo{ID: 6}, &PeopleInfo{ID: 7}},
+		4:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 3}},
+		5:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 6}, &PeopleInfo{ID: 8}},
+		6:  []Node{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 5}},
+		7:  []Node{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 12}},
+		8:  []Node{&PeopleInfo{ID: 5}},
+		9:  []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 10}, &PeopleInfo{ID: 11}},
+		10: []Node{&PeopleInfo{ID: 9}},
+		11: []Node{&PeopleInfo{ID: 9}},
+		12: []Node{&PeopleInfo{ID: 7}},
+	}
+	tests := []struct {
+		name   string
+		start  int
+		finish int
+		want   int
+	}{
+		{"1 -> 7", 1, 7, 3},
+		{"5 -> 1", 5, 1, 3},
+		{"2 -> 4", 2, 4, 3},
+		{"1 -> 8", 1, 8, 3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			start := &PeopleInfo{ID: tt.start}
+			finish := &PeopleInfo{ID: tt.finish}
+			connections := start.FindAllConnections(graph, finish)
+			if l := len(connections); l != tt.want {
+				t.Errorf("FindAllConnections: %d -> %d len = %v, want %v", tt.start, tt.finish, l, tt.want)
 			}
 		})
 	}
