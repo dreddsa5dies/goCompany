@@ -1,5 +1,17 @@
 package ogrnOnline
 
+// SliceCompanyInfo слайс сведений о юридических лицах
+type SliceCompanyInfo []CompanyInfo
+
+// SlicePeopleInfo слайс сведений о физических лицах
+type SlicePeopleInfo []PeopleInfo
+
+// SliceCompanyOwnerInfo слайс сведений об участниках юридического лица
+type SliceCompanyOwnerInfo []CompanyOwnerInfo
+
+// SliceCompanyAssociateInfo слайс сведений о работниках юридиеческого лица
+type SliceCompanyAssociateInfo []CompanyAssociateInfo
+
 // CompanyInfo - базовая информация о юридическом лице
 type CompanyInfo struct {
 	ID          int       `json:"id"`                    // ID
@@ -21,8 +33,9 @@ type CompanyFullInfo struct {
 	Email               string            `json:"email,omitempty"`               // Email
 	AuthorizedCapital   authorizedCapital `json:"authorizedCapital,omitempty"`   // Уставной капитал
 	LastUpdateDate      string            `json:"lastUpdateDate"`                // Дата последнего обновления информации
-	Assignee            []CompanyInfo     `json:"assignee"`                      // Правопреемники
-	Predecessor         []CompanyInfo     `json:"predecessor"`                   // Правопредшественники
+	Assignee            SliceCompanyInfo  `json:"assignee"`                      // Правопреемники
+	Predecessor         SliceCompanyInfo  `json:"predecessor"`                   // Правопредшественники
+	OKOPF               okopf             `json:"okopf"`                         // ОКОПФ
 	MainOkved           okved             `json:"mainOkved,omitempty"`           // Главный ОКВЭД
 	MainOkved1          okved             `json:"mainOkved1,omitempty"`          // Главный ОКВЭД 1
 	MainOkved2          okved             `json:"mainOkved2,omitempty"`          // Главный ОКВЭД 2
@@ -52,7 +65,7 @@ type CompanyAssociateInfo struct {
 	ID            int           `json:"id"`            // ID
 	Company       CompanyInfo   `json:"company"`       // Информация о юридическом лице
 	Person        PeopleInfo    `json:"person"`        // Информация об управляющем
-	Post          base          `json:"post"`          // Информация о должности
+	Post          base          `json:"okopf"`         // Информация о должности
 	PostName      string        `json:"postName"`      // Наименование должности
 	Phone         string        `json:"phone"`         // Телефон
 	Unreliability []interface{} `json:"unreliability"` //
