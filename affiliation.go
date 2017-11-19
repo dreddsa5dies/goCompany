@@ -204,14 +204,20 @@ func buildGraph(start Node, graph *Graph) error {
 func (c *CompanyInfo) NewGraph() (*Graph, error) {
 	graph := &Graph{}
 	err := buildGraph(c, graph)
-	return graph, fmt.Errorf("NewGraph: %v", err)
+	if err != nil {
+		return &Graph{}, fmt.Errorf("NewGraph: %v", err)
+	}
+	return graph, nil
 }
 
 // NewGraph возвращает Graph
 func (p *PeopleInfo) NewGraph() (*Graph, error) {
 	graph := &Graph{}
 	err := buildGraph(p, graph)
-	return graph, fmt.Errorf("NewGraph: %v", err)
+	if err != nil {
+		return &Graph{}, fmt.Errorf("NewGraph: %v", err)
+	}
+	return graph, nil
 }
 
 // inSlice проверяет наличие Node в []Node
@@ -242,7 +248,6 @@ func findConnectionBetweenNodes(graph *Graph, start, finish Node, connection []N
 	//	Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
 	//	рекурсивно запускается функция findConnectionBetweenNodes.
 	//	Положтельный результат влечет возврат true, отсутствие результата - false.
-
 	for _, node := range (*graph)[start.getID()] {
 		if !inSlice(node, connection) {
 			if findConnectionBetweenNodes(graph, node, finish, connection) {
@@ -275,7 +280,6 @@ func findAllConnectionBetweenNode(graph *Graph, start, finish Node, connection [
 	//	Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
 	//	рекурсивно запускается функция findAllConnectionBetweenNode.
 	//	Положтельный результат вкладывадывается в общий слайс.
-
 	for _, node := range (*graph)[start.getID()] {
 		if !inSlice(node, connection) {
 			newConnection := findAllConnectionBetweenNode(graph, node, finish, connection)

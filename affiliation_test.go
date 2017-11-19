@@ -172,14 +172,14 @@ func TestGetBranch(t *testing.T) {
 
 func TestConnectionIsExist(t *testing.T) {
 	graph := &Graph{
-		1: []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
-		2: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}},
-		3: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}, &PeopleInfo{ID: 6}},
-		4: []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 6}},
-		5: []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 7}},
-		6: []Node{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
-		7: []Node{&PeopleInfo{ID: 5}},
-		8: []Node{},
+		1: Branch{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
+		2: Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}},
+		3: Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 5}, &PeopleInfo{ID: 6}},
+		4: Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 6}},
+		5: Branch{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 7}},
+		6: Branch{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}},
+		7: Branch{&PeopleInfo{ID: 5}},
+		8: Branch{},
 	}
 	tests := []struct {
 		name   string
@@ -205,18 +205,18 @@ func TestConnectionIsExist(t *testing.T) {
 
 func TestFindAllConnections(t *testing.T) {
 	graph := &Graph{
-		1:  []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}, &PeopleInfo{ID: 5}},
-		2:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 9}},
-		3:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 4}, &PeopleInfo{ID: 6}, &PeopleInfo{ID: 7}},
-		4:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 3}},
-		5:  []Node{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 6}, &PeopleInfo{ID: 8}},
-		6:  []Node{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 5}},
-		7:  []Node{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 12}},
-		8:  []Node{&PeopleInfo{ID: 5}},
-		9:  []Node{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 10}, &PeopleInfo{ID: 11}},
-		10: []Node{&PeopleInfo{ID: 9}},
-		11: []Node{&PeopleInfo{ID: 9}},
-		12: []Node{&PeopleInfo{ID: 7}},
+		1:  Branch{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 3}, &PeopleInfo{ID: 4}, &PeopleInfo{ID: 5}},
+		2:  Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 9}},
+		3:  Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 4}, &PeopleInfo{ID: 6}, &PeopleInfo{ID: 7}},
+		4:  Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 3}},
+		5:  Branch{&PeopleInfo{ID: 1}, &PeopleInfo{ID: 6}, &PeopleInfo{ID: 8}},
+		6:  Branch{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 5}},
+		7:  Branch{&PeopleInfo{ID: 3}, &PeopleInfo{ID: 12}},
+		8:  Branch{&PeopleInfo{ID: 5}},
+		9:  Branch{&PeopleInfo{ID: 2}, &PeopleInfo{ID: 10}, &PeopleInfo{ID: 11}},
+		10: Branch{&PeopleInfo{ID: 9}},
+		11: Branch{&PeopleInfo{ID: 9}},
+		12: Branch{&PeopleInfo{ID: 7}},
 	}
 	tests := []struct {
 		name   string
