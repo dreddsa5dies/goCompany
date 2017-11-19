@@ -2,17 +2,22 @@ package ogrnOnline
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
+	"strings"
 )
 
 // Graph граф (карта анализируемых связей)
-type Graph map[int][]Node
+type Graph map[int]Branch
+
+// Branch ветка графа
+type Branch []Node
 
 // Node вершина графа (юридическое или физическое лицо)
 type Node interface {
-	String() string
 	getID() int
-	getBranch() ([]Node, error)
+	String() string
+	getBranch() (Branch, error)
 }
 
 // getID возвращает ID
@@ -41,91 +46,140 @@ func (p *PeopleInfo) String() string {
 	return fmt.Sprintf("[ %s : ИНН неизвестен ]", p.FullName)
 }
 
-// sortNode сортирует []Node по ID
-func sortNode(sliceNode []Node) {
-	if !sort.SliceIsSorted(sliceNode, func(i, j int) bool {
-		return sliceNode[i].getID() < sliceNode[j].getID()
+func (b Branch) sortByID() {
+	if !sort.SliceIsSorted(b, func(i, j int) bool {
+		return b[i].getID() < b[j].getID()
 	},
 	) {
-		sort.Slice(sliceNode, func(i, j int) bool {
-			return sliceNode[i].getID() < sliceNode[j].getID()
+		sort.Slice(b, func(i, j int) bool {
+			return b[i].getID() < b[j].getID()
 		})
 	}
 }
 
-// clearSlice очищает []Node от дублирующих друг друга Node
-func clearSlice(sliceNode []Node) []Node {
-	cleanSlice := []Node{}
-	for i := range sliceNode {
+// ClearDouble очищает Branch от дублирующих друг друга Node
+func (b *Branch) ClearDouble() {
+	var clean Branch
+	b.sortByID()
+
+	for i, n := range *b {
 		if i == 0 {
-			cleanSlice = append(cleanSlice, sliceNode[i])
+			clean = append(clean, n)
+			continue
 		}
-		if sliceNode[i].getID() != cleanSlice[len(cleanSlice)-1].getID() {
-			cleanSlice = append(cleanSlice, sliceNode[i])
+		if n.getID() != clean[len(clean)-1].getID() {
+			clean = append(clean, n)
 		}
 	}
-	return cleanSlice
+	*b = clean
+}
+
+// isBankrupt возвращает true, если компанией управляет арбитражный управляющий
+func isBankrupt(post string) bool {
+	res, err := regexp.MatchString(`(арбитражный|временный|внешний|административный|конкурсный)`, strings.ToLower(post))
+	if err != nil {
+		panic(fmt.Errorf("isBankrupt: ошибка при проверке должности %s = %v", post, err))
+	}
+	return res
+}
+
+// isCommercial возвращает true если компания коммерческая
+func isCommercial(okopf string) bool {
+	res, err := regexp.MatchString(`^(1|6)`, okopf)
+	if err != nil {
+		panic(fmt.Errorf("isCommercial: ошибка при проверке ОКОПФ %s = %v", okopf, err))
+	}
+	return res
 }
 
 // getBranch возвращает список связанных Node
-func (c *CompanyInfo) getBranch() ([]Node, error) {
-	nodes := []Node{}
+func (c *CompanyInfo) getBranch() (Branch, error) {
+	var (
+		nodes     Branch
+		companies SliceCompanyInfo
+		peoples   SlicePeopleInfo
+	)
 
 	sub, err := GetSubCompanies(c.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
+		return Branch{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
 	}
-	for i := range sub {
-		nodes = append(nodes, &sub[i])
-	}
+	companies = append(companies, sub...)
 
 	owners, err := GetOwners(c.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
+		return Branch{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
 	}
-	for i := range owners {
-		if owners[i].CompanyOwner.ID != 0 {
-			nodes = append(nodes, &owners[i].CompanyOwner)
-		}
-		if owners[i].PersonOwner.ID != 0 {
-			nodes = append(nodes, &owners[i].PersonOwner)
-		}
-	}
+	cc, pp := owners.ExtractOwners()
+	companies = append(companies, cc...)
+	peoples = append(peoples, pp...)
 
 	workers, err := GetAssociates(c.ID)
 	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
+		return Branch{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
 	}
-	for i := range workers {
-		nodes = append(nodes, &workers[i].Person)
+	for _, work := range workers {
+		if !isBankrupt(work.PostName) {
+			peoples = append(peoples, work.Person)
+		}
 	}
 
-	sortNode(nodes)
-	return clearSlice(nodes), nil
+	peoples.ClearDouble()
+	for i := range peoples {
+		nodes = append(nodes, &peoples[i])
+	}
+
+	companies.ClearDouble()
+	companies.ClearInactive()
+	for i := range companies {
+		full, err := GetCompanyFullInfo(companies[i].ID)
+		if err != nil {
+			return Branch{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", c.ID, err)
+		}
+		if isCommercial(full.OKOPF.Code) {
+			nodes = append(nodes, &companies[i])
+		}
+	}
+
+	return nodes, nil
 }
 
 // getBranch возвращает список связанных Node
-func (p *PeopleInfo) getBranch() ([]Node, error) {
-	nodes := []Node{}
-
-	jobs, err := GetJobs(p.ID)
-	if err != nil {
-		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", p.ID, err)
-	}
-	for i := range jobs {
-		nodes = append(nodes, &jobs[i].Company)
-	}
+func (p *PeopleInfo) getBranch() (Branch, error) {
+	var (
+		nodes     Branch
+		companies SliceCompanyInfo
+	)
 
 	shares, err := GetShare(p.ID)
 	if err != nil {
 		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", p.ID, err)
 	}
-	for i := range shares {
-		nodes = append(nodes, &shares[i])
+	companies = append(companies, shares...)
+
+	jobs, err := GetJobs(p.ID)
+	if err != nil {
+		return []Node{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", p.ID, err)
+	}
+	for _, work := range jobs {
+		if !isBankrupt(work.PostName) {
+			companies = append(companies, work.Company)
+		}
 	}
 
-	sortNode(nodes)
-	return clearSlice(nodes), nil
+	companies.ClearDouble()
+	companies.ClearInactive()
+	for i := range companies {
+		full, err := GetCompanyFullInfo(companies[i].ID)
+		if err != nil {
+			return Branch{}, fmt.Errorf("getBranch: ошибка обработки компании с ID %d: %v", p.ID, err)
+		}
+		if isCommercial(full.OKOPF.Code) {
+			nodes = append(nodes, &companies[i])
+		}
+	}
+
+	return nodes, nil
 }
 
 // Построитель графа
@@ -150,14 +204,20 @@ func buildGraph(start Node, graph *Graph) error {
 func (c *CompanyInfo) NewGraph() (*Graph, error) {
 	graph := &Graph{}
 	err := buildGraph(c, graph)
-	return graph, fmt.Errorf("NewGraph: %v", err)
+	if err != nil {
+		return &Graph{}, fmt.Errorf("NewGraph: %v", err)
+	}
+	return graph, nil
 }
 
 // NewGraph возвращает Graph
 func (p *PeopleInfo) NewGraph() (*Graph, error) {
 	graph := &Graph{}
 	err := buildGraph(p, graph)
-	return graph, fmt.Errorf("NewGraph: %v", err)
+	if err != nil {
+		return &Graph{}, fmt.Errorf("NewGraph: %v", err)
+	}
+	return graph, nil
 }
 
 // inSlice проверяет наличие Node в []Node
@@ -185,11 +245,9 @@ func findConnectionBetweenNodes(graph *Graph, start, finish Node, connection []N
 		return true
 	}
 
-	/*
-		Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
-		рекурсивно запускается функция findConnectionBetweenNodes.
-		Положтельный результат влечет возврат true, отсутствие результата - false.
-	*/
+	//	Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
+	//	рекурсивно запускается функция findConnectionBetweenNodes.
+	//	Положтельный результат влечет возврат true, отсутствие результата - false.
 	for _, node := range (*graph)[start.getID()] {
 		if !inSlice(node, connection) {
 			if findConnectionBetweenNodes(graph, node, finish, connection) {
@@ -219,11 +277,9 @@ func findAllConnectionBetweenNode(graph *Graph, start, finish Node, connection [
 	// Создается [][]Node для всех найденных связей
 	connections := [][]Node{}
 
-	/*
-		Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
-		рекурсивно запускается функция findAllConnectionBetweenNode.
-		Положтельный результат вкладывадывается в общий слайс.
-	*/
+	//	Для каждой Node, с которой есть связь у стартовой Node (если она уже не была проверена ранее)
+	//	рекурсивно запускается функция findAllConnectionBetweenNode.
+	//	Положтельный результат вкладывадывается в общий слайс.
 	for _, node := range (*graph)[start.getID()] {
 		if !inSlice(node, connection) {
 			newConnection := findAllConnectionBetweenNode(graph, node, finish, connection)
