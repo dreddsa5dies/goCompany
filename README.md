@@ -18,7 +18,7 @@ go get github.com/dreddsa5dies/ogrnOnline
 ```
 
 ## Лицензия
-Этот проект с лицензией MIN. Пожалуйста, прочитайте [LICENSE](https://github.com/dreddsa5dies/goCompany/tree/master/LICENSE.md).  
+Этот проект с лицензией MIT. Пожалуйста, прочитайте [LICENSE](https://github.com/dreddsa5dies/goCompany/tree/master/LICENSE.md).  
 
 ## Развитие проекта
 Приглашаются все для развития проекта. Пожалуйста, прочитайте [CONTRIBUTING](https://github.com/dreddsa5dies/goCompany/tree/master/CONTRIBUTING.md), [ISSUE TEMPLATE](https://github.com/dreddsa5dies/goCompany/tree/master/ISSUE_TEMPLATE.md) и [CODE_OF_CONDUCT](https://github.com/dreddsa5dies/goCompany/tree/master/CODE_OF_CONDUCT.md) файлы. 
