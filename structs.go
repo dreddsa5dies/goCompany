@@ -1,4 +1,4 @@
-package ogrnOnline
+package goCompany
 
 // SliceCompanyInfo слайс сведений о юридических лицах
 type SliceCompanyInfo []CompanyInfo

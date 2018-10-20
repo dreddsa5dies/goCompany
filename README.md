@@ -2,7 +2,7 @@
 
 [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/GDNsM0F)
 
-# ogrnOnline
+# goCompany
 Go (Golang) пакет для работы с API проекта ОГРН.Онлайн (https://огрн.онлайн)
 
 ## Возможности
@@ -14,7 +14,7 @@ Go (Golang) пакет для работы с API проекта ОГРН.Онл
 
 ## Установка
 ```bash
-go get github.com/dreddsa5dies/ogrnOnline
+go get github.com/dreddsa5dies/goCompany
 ```
 
 ## Лицензия
