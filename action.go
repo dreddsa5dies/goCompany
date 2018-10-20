@@ -1,4 +1,4 @@
-package ogrnOnline
+package goCompany
 
 import "sort"
 
