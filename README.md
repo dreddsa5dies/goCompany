@@ -1,9 +1,9 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/dreddsa5dies/goCompany)](https://goreportcard.com/report/github.com/dreddsa5dies/goCompany) ![License](https://img.shields.io/badge/License-MIT-blue.svg) 
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/GDNsM0F)
+
 # ogrnOnline
 Go (Golang) пакет для работы с API проекта ОГРН.Онлайн (https://огрн.онлайн)
-
-Версия: 0.4
-
-В настоящий момент реализованы все возможности, предоставляемые API.
 
 ## Возможности
 * поиск лиц по заданному параметру (ФИО, наименование, огрн, огрнип, инн)
@@ -12,8 +12,13 @@ Go (Golang) пакет для работы с API проекта ОГРН.Онл
 * получение информации о бухгалтерской отчетности компании
 * функции для юридического анализа связей между лицами (формирование графа и его обход)
 
-## В планах:
-* функции для финансового анализа полученной бухгалтерской отчетности
-
 ## Установка
-go get github.com/tsiporin/ogrnOnline
+```bash
+go get github.com/dreddsa5dies/ogrnOnline
+```
+
+## Лицензия
+Этот проект с лицензией MIN. Пожалуйста, прочитайте [LICENSE](https://github.com/dreddsa5dies/goCompany/tree/master/LICENSE.md).  
+
+## Развитие проекта
+Приглашаются все для развития проекта. Пожалуйста, прочитайте [CONTRIBUTING](https://github.com/dreddsa5dies/goCompany/tree/master/CONTRIBUTING.md), [ISSUE TEMPLATE](https://github.com/dreddsa5dies/goCompany/tree/master/ISSUE_TEMPLATE.md) и [CODE_OF_CONDUCT](https://github.com/dreddsa5dies/goCompany/tree/master/CODE_OF_CONDUCT.md) файлы. 
